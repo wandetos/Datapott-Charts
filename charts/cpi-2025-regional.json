@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "id": "cpi-2025-regional",
+  "folder": "",
+  "type": "multiple-columns",
+  "title": "2025 Corruption Perceptions Index (CPI) Regional Comparison",
+  "description": "",
+  "notes": "Sample chart. Compiled by Datapott Analytics from the Corruption Perceptions Index 2020\u20132025.",
+  "source": "Transparency International",
+  "sourceUrl": "https://www.transparency.org/cpi",
+  "byline": "Datapott Analytics",
+  "alt": "",
+  "data": {
+    "mode": "paste",
+    "text": "Group,Average 2025,Range (high - low),Below 50 (count),Change 2020-2025\nWestern Europe & EU,64.1,49,6,-1.7\nAsia Pacific,44.8,69,21,-0.5\nAmericas,41.8,65,22,-1.6\nMiddle East & North Africa,38.9,56,11,-0.2\nEastern Europe & Central Asia,34.4,33,18,-1.5\nSub-Saharan Africa,32.1,59,45,-0.2\nGlobal average,42.5,80,123,-0.8",
+    "url": "",
+    "live": true
+  },
+  "transpose": false,
+  "firstRowLabel": true,
+  "columns": {},
+  "refine": {
+    "labelCol": "",
+    "palette": "datapott",
+    "colors": {},
+    "colorBy": "auto",
+    "sort": "none",
+    "valueLabels": true,
+    "decimals": "auto",
+    "height": 400,
+    "panelsPerRow": 4,
+    "panelHeight": 180,
+    "rotateLabels": "auto",
+    "grid": true,
+    "tableBars": true
+  },
+  "layout": {
+    "dataDownload": true,
+    "attribution": true,
+    "dark": false,
+    "previewWidth": 630
+  },
+  "createdAt": 1795108548517,
+  "updatedAt": 1795108558263
+}

@@ -1,0 +1,37 @@
+/* Styles for the chart itself. Used by the editor preview AND the public viewer. */
+.dp-chart {
+  --dp-text: #1d1d1d;
+  --dp-muted: #6b6b6b;
+  --dp-bg: #ffffff;
+  --dp-line: #e6e6e6;
+  font-family: Roboto, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  color: var(--dp-text);
+  background: var(--dp-bg);
+  padding: 16px;
+  box-sizing: border-box;
+  line-height: 1.35;
+}
+.dp-chart.dp-dark { --dp-text: #f1f1f1; --dp-muted: #b4b4b4; --dp-bg: #1e1f22; --dp-line: #3a3b3f; }
+.dp-chart svg { color: var(--dp-text); }
+.dp-title { font-size: 20px; font-weight: 700; margin: 0 0 6px; }
+.dp-desc { font-size: 14px; color: var(--dp-text); margin: 0 0 10px; }
+.dp-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; margin: 4px 0 10px; }
+.dp-legend-item { display: inline-flex; align-items: center; gap: 6px; }
+.dp-legend-item i { width: 12px; height: 12px; display: inline-block; border-radius: 2px; }
+.dp-body { width: 100%; overflow: hidden; }
+.dp-panels { display: grid; }
+.dp-panel-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
+.dp-pie-wrap { display: flex; justify-content: center; }
+.dp-notes { font-size: 11.5px; color: var(--dp-muted); font-style: italic; margin: 10px 0 0; }
+.dp-footer { font-size: 11px; color: var(--dp-muted); margin-top: 8px; }
+.dp-footer a { color: #1d81a2; text-decoration: none; }
+.dp-dark .dp-footer a { color: #6cc4e6; }
+.dp-footer a:hover { text-decoration: underline; }
+.dp-empty { padding: 40px 10px; text-align: center; color: var(--dp-muted); border: 1px dashed var(--dp-line); border-radius: 6px; font-size: 14px; }
+.dp-table-wrap { overflow-x: auto; }
+.dp-table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.dp-table th { text-align: left; border-bottom: 2px solid var(--dp-text); padding: 6px 8px; cursor: pointer; user-select: none; white-space: nowrap; }
+.dp-table td { border-bottom: 1px solid var(--dp-line); padding: 6px 8px; }
+.dp-table .num { text-align: right; position: relative; min-width: 80px; }
+.dp-cellbar { position: absolute; left: 4px; top: 6px; bottom: 6px; opacity: 0.25; border-radius: 2px; max-width: calc(100% - 8px); }
+.dp-cellval { position: relative; }
