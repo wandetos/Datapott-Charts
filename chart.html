@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect x=%221%22 y=%228%22 width=%223%22 height=%227%22 fill=%22%23168232%22/%3E%3Crect x=%226%22 y=%223%22 width=%223%22 height=%2212%22 fill=%22%231d81a2%22/%3E%3Crect x=%2211%22 y=%226%22 width=%223%22 height=%229%22 fill=%22%23e0614a%22/%3E%3C/svg%3E" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Datapott chart</title>
+  <meta name="robots" content="noindex" />
+  <link rel="stylesheet" href="css/chart.css" />
+  <style>
+    html, body { margin: 0; background: transparent; }
+    .dp-chart { padding: 10px 4px; }
+    #msg { font-family: Roboto, Arial, sans-serif; color: #777; padding: 30px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="chart"><div id="msg">Loading chart…</div></div>
+
+  <script src="vendor/d3.min.js"></script>
+  <script src="vendor/plot.umd.min.js"></script>
+  <script src="vendor/papaparse.min.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/render.js"></script>
+  <script>
+    /* Public viewer: chart.html?id=my-chart  (reads charts/my-chart.json)
+                 or chart.html#z...         (instant link: chart packed in the URL) */
+    (async function () {
+      const box = document.getElementById("chart");
+      let cfg;
+      try {
+        const id = new URLSearchParams(location.search).get("id");
+        if (id) {
+          const res = await fetch("charts/" + encodeURIComponent(id) + ".json", { cache: "no-cache" });
+          if (!res.ok) throw new Error("Chart '" + id + "' was not found. Has its .json file been uploaded to the charts/ folder?");
+          cfg = await res.json();
+        } else if (location.hash.length > 2) {
+          cfg = await DP.unpackConfig(location.hash.slice(1));
+        } else {
+          throw new Error("No chart selected.");
+        }
+      } catch (err) {
+        box.innerHTML = '<div id="msg"></div>';
+        document.getElementById("msg").textContent = err.message;
+        return;
+      }
+      cfg = DP.normalizeConfig(cfg);
+      if (cfg.title) document.title = cfg.title + " | Datapott";
+      const rows = await DP.loadRows(cfg); // live Google Sheet if enabled, else saved copy
+      const ds = DP.buildDataset(rows, cfg);
+
+      function draw() {
+        DP.renderChart(box, cfg, ds, { width: document.documentElement.clientWidth });
+        // Tell the page that embeds us how tall we are (auto-resizing iframe)
+        const h = Math.ceil(document.documentElement.scrollHeight);
+        if (window.parent !== window) window.parent.postMessage({ type: "datapott-height", id: cfg.id, height: h }, "*");
+      }
+      draw();
+      let w = document.documentElement.clientWidth, t;
+      window.addEventListener("resize", () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          if (document.documentElement.clientWidth !== w) { w = document.documentElement.clientWidth; draw(); }
+        }, 150);
+      });
+    })();
+  </script>
+</body>
+</html>
