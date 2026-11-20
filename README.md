@@ -142,6 +142,18 @@ Phase 3 of the roadmap moves charts into an online database so this step disappe
 
 ---
 
+## How we work on the code (Claude + GitHub Desktop)
+
+* Claude makes changes and pushes them straight to this repository. GitHub Pages updates the live site
+  within 1–2 minutes (press Ctrl+F5 to see it).
+* Before you open the files in VS Code: GitHub Desktop → **Fetch origin** → **Pull origin**.
+* If you change something yourself: GitHub Desktop → write a summary → **Commit to main** → **Push origin**,
+  before asking Claude for the next change.
+* Something broke? GitHub Desktop → **History** → right-click the bad commit → **Revert changes in commit**
+  → **Push origin**.
+
+---
+
 ## Updating the chart libraries (optional, later)
 
 ```
