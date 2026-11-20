@@ -615,14 +615,22 @@
             <div id="quick"></div>
           </div>
           <div class="pub-section">
-            <h4>3. Export image</h4>
+            <h4>3. Export image or PDF</h4>
+            <label class="field">Size</label>
+            <select id="epreset">${DP.EXPORT_PRESETS.map((p) => `<option value="${p.id}" ${S.exportPreset === p.id ? "selected" : ""}>${p.name}</option>`).join("")}</select>
             <div class="row">
-              <div><label class="field">Format</label><select id="efmt"><option value="png">PNG</option><option value="svg">SVG</option><option value="jpg">JPG</option></select></div>
-              <div><label class="field">Scale</label><select id="escale"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option></select></div>
+              <div><label class="field">Format</label><select id="efmt">
+                <option value="png">PNG (best for social media)</option><option value="jpg">JPG</option>
+                <option value="pdf">PDF</option><option value="svg">SVG</option></select></div>
+              <div id="escalebox"><label class="field">Resolution</label><select id="escale"><option value="1">1×</option><option value="2" selected>2×</option><option value="3">3×</option></select></div>
             </div>
-            <label class="check"><input type="checkbox" id="etrans"/> Transparent background (PNG)</label>
-            <button class="btn" id="dlimg">⬇ Download image</button>
-            <p class="hint">SVG and high-resolution exports are free here (Datawrapper charges for SVG and PDF). PDF export comes in Phase 2.</p>
+            <label class="check"><input type="checkbox" id="etrans"/> Transparent background (PNG only)</label>
+            <div class="row" style="gap:8px">
+              <button class="btn ghost" id="eprev" style="flex:0 0 auto">👁 Preview this size</button>
+              <button class="btn" id="dlimg" style="flex:0 0 auto">⬇ Download</button>
+            </div>
+            <div id="eout" class="hint"></div>
+            <p class="hint">Social sizes re-draw the chart to fit the frame (taller or shorter plot), so nothing is stretched.</p>
           </div>
         </div>
         ${previewHtml()}
@@ -656,31 +664,30 @@
       $("#cq1").onclick = (e) => copy($("#qlink").value, e.target);
       $("#cq2").onclick = (e) => copy($("#qembed").value, e.target);
     };
-    $("#dlimg").onclick = async () => {
-      const node = $("#preview .dp-chart");
-      const fmt = $("#efmt").value;
-      const scale = Number($("#escale").value);
-      const transparent = $("#etrans").checked && fmt === "png";
-      const bg = transparent ? null : getComputedStyle(node).backgroundColor;
-      const opts = { pixelRatio: scale, backgroundColor: bg, cacheBust: true };
-      if (transparent) node.style.background = "transparent";
+    const expOpts = () => ({
+      format: $("#efmt").value,
+      preset: $("#epreset").value,
+      scale: Number($("#escale").value),
+      transparent: $("#etrans").checked,
+      previewWidth: S.previewWidth,
+      fileName: (S.cfg.title || S.cfg.id).replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").slice(0, 60).toLowerCase() || "chart",
+    });
+    const syncScale = () => ($("#escalebox").style.visibility = $("#epreset").value === "chart" ? "visible" : "hidden");
+    $("#epreset").onchange = () => { S.exportPreset = $("#epreset").value; syncScale(); $("#eout").innerHTML = ""; };
+    syncScale();
+    $("#eprev").onclick = async () => {
+      $("#eout").textContent = "Drawing…";
       try {
-        const name = (S.cfg.title || S.cfg.id).replace(/[^a-z0-9]+/gi, "-").slice(0, 60).toLowerCase() || "chart";
-        let url;
-        if (fmt === "svg") url = await htmlToImage.toSvg(node, opts);
-        else if (fmt === "jpg") url = await htmlToImage.toJpeg(node, Object.assign({ quality: 0.95 }, opts));
-        else url = await htmlToImage.toPng(node, opts);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = name + "." + fmt;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } catch (err) {
-        alert("Export failed: " + err.message);
-      } finally {
-        node.style.background = "";
-      }
+        const url = await DP.exportChart(S.cfg, S.ds, Object.assign(expOpts(), { preview: true }));
+        $("#eout").innerHTML = `<img src="${url}" class="export-preview" alt="Export preview"/>`;
+      } catch (err) { $("#eout").innerHTML = `<span class="error">${esc(err.message)}</span>`; }
+    };
+    $("#dlimg").onclick = async (e) => {
+      const btn = e.target, old = btn.textContent;
+      btn.disabled = true; btn.textContent = "Preparing…";
+      try { await DP.exportChart(S.cfg, S.ds, expOpts()); }
+      catch (err) { alert("Export failed: " + err.message); }
+      finally { btn.disabled = false; btn.textContent = old; }
     };
   }
 

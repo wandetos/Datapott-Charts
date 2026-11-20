@@ -142,6 +142,18 @@ GitHub replaces the old file and every article updates.
 3. Refine → choose the **Region** (World, Africa, Western Africa, MENA, Europe…), the value column,
    the colour scheme and the scale. The panel tells you which rows did not match a country.
 
+
+Test files with made-up values are in the `samples` folder (`map-test-africa.csv`, `map-test-data.csv`).
+Open one, copy everything, and paste it into Step 1 → Copy & paste.
+
+---
+
+## Images for social media and PDF
+
+Step 4 → **Export image or PDF** → choose a **Size** (Instagram square 1080×1080, portrait 1080×1350,
+X/LinkedIn 1200×675, Facebook 1200×630, Story 1080×1920, A4) and a **Format** (PNG, JPG, PDF, SVG).
+Click **Preview this size** to check it, then **Download**. Long bar charts work best in Story or Portrait sizes.
+
 ---
 
 ## STEP 6. Back up your work

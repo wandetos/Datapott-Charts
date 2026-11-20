@@ -32,7 +32,8 @@ We build in phases. Each phase ends with something that works and is live on dat
 - [ ] Text annotations on the chart
 - [x] Logo in footer (DataPott wordmark or your own image in assets/logo.png)
 - [ ] Brand fonts and saved default settings
-- [ ] PDF export; social-media sizes (1080×1080, 1200×675)
+- [x] PDF export; social-media sizes (1080×1080, 1080×1350, 1200×675, 1200×630, 1080×1920) and A4, with preview
+- [x] Map test data files in samples/
 - [ ] Sort panels, separate mobile panel count, reverse order
 - [ ] Election donut, waterfall and dual-axis charts (Datawrapper Business features, free here)
 
