@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "id": "v8cbk",
+  "folder": "",
+  "type": "map-symbols",
+  "title": "Testing Images",
+  "description": "Testing the process ",
+  "notes": "Source: Transparency International, Corruption Perceptions Index 2020–2025. Compiled by Datapott Analytics.",
+  "source": "",
+  "sourceUrl": "",
+  "byline": "Source: Transparency International, Corruption Perceptions Index 2020–2025 (transparency.org/cpi). Compiled by Datapott Analytics.",
+  "alt": "",
+  "data": {
+    "mode": "paste",
+    "text": "Country,ISO3,Test score (0-100),Test rate (%),Test count\nAruba,ABW,10,22.3,94\nAfghanistan,AFG,14,43.0,124\nAngola,AGO,51,23.4,143\nAnguilla,AIA,33,10.9,215\nÅland Islands,ALA,21,19.0,177\nAlbania,ALB,76,19.1,26\nAndorra,AND,27,36.8,179\nUnited Arab Emirates,ARE,54,23.9,71\nArgentina,ARG,35,39.8,4\nArmenia,ARM,25,28.8,215\nAmerican Samoa,ASM,11,19.2,267\nFrench Southern and Antarctic Lands,ATF,52,4.8,184\nAntigua and Barbuda,ATG,87,16.0,271\nAustralia,AUS,11,35.9,243\nAustria,AUT,86,14.3,51\nAzerbaijan,AZE,74,47.4,221\nBurundi,BDI,90,40.0,130\nBelgium,BEL,30,30.8,8\nBenin,BEN,86,41.6,107\nBurkina Faso,BFA,80,0.1,201\nBangladesh,BGD,86,27.5,205\nBulgaria,BGR,51,42.7,131\nBahrain,BHR,84,49.9,129\nBahamas,BHS,75,25.4,69\nBosnia and Herzegovina,BIH,14,2.6,249\nSaint Barthélemy,BLM,19,17.5,166\n\"Saint Helena, Ascension and Tristan da Cunha\",SHN,40,23.6,33\nBelarus,BLR,40,8.7,173\nBelize,BLZ,54,46.2,31\nBermuda,BMU,88,49.7,233\nBolivia,BOL,55,18.5,259\nCaribbean Netherlands,BES,62,25.1,93\nBrazil,BRA,53,12.8,290\nBarbados,BRB,56,45.5,45\nBrunei,BRN,23,48.1,208\nBhutan,BTN,33,41.3,110\nBouvet Island,BVT,80,24.2,154\nBotswana,BWA,28,5.0,240\nCentral African Republic,CAF,80,13.1,228\nCanada,CAN,37,43.1,131\nCocos (Keeling) Islands,CCK,10,1.0,11\nSwitzerland,CHE,55,14.8,243\nChile,CHL,35,32.0,298\nChina,CHN,49,37.8,53\nCote d'Ivoire,CIV,62,24.7,74\nCameroon,CMR,31,24.9,188\n\"Congo, Dem. Rep.\",COD,47,15.1,148\n\"Congo, Rep.\",COG,51,5.9,190\nCook Islands,COK,75,24.8,169\nColombia,COL,27,38.7,113\nComoros,COM,18,28.6,117\nCabo Verde,CPV,26,25.6,278\nCosta Rica,CRI,42,8.2,252\nCuba,CUB,77,36.3,73\nCuraçao,CUW,33,11.8,95\nChristmas Island,CXR,83,34.6,170\nCayman Islands,CYM,44,25.7,134\nCyprus,CYP,69,0.7,236\nCzechia,CZE,73,0.9,236\nGermany,DEU,49,30.7,4\nDjibouti,DJI,78,48.8,271\nDominica,DMA,30,8.4,111\nDenmark,DNK,48,49.9,226\nDominican Republic,DOM,48,9.2,171\nAlgeria,DZA,58,49.7,95\nEcuador,ECU,17,23.3,289\n\"Egypt, Arab Rep.\",EGY,77,3.6,175\nEritrea,ERI,68,42.9,151\nWestern Sahara,ESH,39,9.1,275\nSpain,ESP,63,6.9,167\nEstonia,EST,38,32.1,253\nEthiopia,ETH,12,28.1,263\nFinland,FIN,75,38.6,49\nFiji,FJI,27,37.3,233\nFalkland Islands,FLK,18,35.9,255\nFrance,FRA,40,17.2,152\nFaroe Islands,FRO,26,4.1,158\nMicronesia,FSM,73,49.2,160\nGabon,GAB,86,44.1,112\nUnited Kingdom,GBR,83,23.7,199\nGeorgia,GEO,66,41.8,44\nGuernsey,GGY,80,0.8,99\nGhana,GHA,89,34.5,282\nGibraltar,GIB,72,0.3,4\nGuinea,GIN,51,0.0,154\nGuadeloupe,GLP,58,25.4,147\n\"Gambia, The\",GMB,31,10.0,240\nGuinea-Bissau,GNB,19,2.0,271\nEquatorial Guinea,GNQ,42,46.3,107\nGreece,GRC,38,44.6,84\nGrenada,GRD,48,21.1,88\nGreenland,GRL,87,30.7,38\nGuatemala,GTM,54,31.1,195\nFrench Guiana,GUF,18,6.7,38\nGuam,GUM,19,40.8,206\nGuyana,GUY,11,25.1,115\nHong Kong,HKG,59,47.3,35\nHeard Island and McDonald Islands,HMD,69,43.4,250\nHonduras,HND,56,5.9,125\nCroatia,HRV,89,32.8,224\nHaiti,HTI,63,14.1,110\nHungary,HUN,87,31.0,175\nIndonesia,IDN,50,25.3,210\nIsle of Man,IMN,33,19.4,237\nIndia,IND,17,23.4,189\nBritish Indian Ocean Territory,IOT,69,28.7,235\nIreland,IRL,37,23.1,285\n\"Iran, Islamic Rep.\",IRN,20,6.4,144\nIraq,IRQ,49,40.7,126\nIceland,ISL,48,34.9,223\nIsrael,ISR,78,3.6,98\nItaly,ITA,83,11.7,81\nJamaica,JAM,16,43.0,21\nJersey,JEY,73,19.5,133\nJordan,JOR,62,0.7,280\nJapan,JPN,41,3.4,104\nKazakhstan,KAZ,53,3.2,208\nKenya,KEN,32,21.0,200\nKyrgyzstan,KGZ,78,32.7,112\nCambodia,KHM,73,47.9,226\nKiribati,KIR,20,8.2,6\nSaint Kitts and Nevis,KNA,16,0.4,30\n\"Korea, Rep.\",KOR,85,33.5,215\nKuwait,KWT,33,31.7,5\nLao PDR,LAO,89,12.1,231\nLebanon,LBN,72,39.3,242\nLiberia,LBR,43,13.4,273\nLibya,LBY,62,3.7,89\nSaint Lucia,LCA,81,2.3,137\nLiechtenstein,LIE,80,39.7,282\nSri Lanka,LKA,59,10.7,241\nLesotho,LSO,16,21.6,212\nLithuania,LTU,69,49.2,87\nLuxembourg,LUX,40,12.2,270\nLatvia,LVA,30,40.1,279\nMacau,MAC,17,48.8,28\nSaint Martin,MAF,54,20.6,32\nMorocco,MAR,21,36.5,161\nMonaco,MCO,44,30.4,234\nMoldova,MDA,71,48.1,81\nMadagascar,MDG,55,12.8,10\nMaldives,MDV,68,45.6,197\nMexico,MEX,22,8.5,197\nMarshall Islands,MHL,38,24.6,194\nNorth Macedonia,MKD,61,42.8,291\nMali,MLI,11,20.9,98\nMalta,MLT,22,19.3,102\nMyanmar,MMR,20,23.6,271\nMontenegro,MNE,41,17.4,213\nMongolia,MNG,16,43.2,228\nNorthern Mariana Islands,MNP,65,19.3,25\nMozambique,MOZ,50,46.3,67\nMauritania,MRT,67,42.5,231\nMontserrat,MSR,63,47.2,264\nMartinique,MTQ,65,18.3,194\nMauritius,MUS,88,45.0,97\nMalawi,MWI,33,15.3,76\nMalaysia,MYS,11,3.3,282\nMayotte,MYT,57,37.5,273\nNamibia,NAM,55,6.4,60\nNew Caledonia,NCL,39,35.3,99\nNiger,NER,81,21.8,140\nNorfolk Island,NFK,32,37.6,288\nNigeria,NGA,47,25.0,74\nNicaragua,NIC,41,24.9,98\nNiue,NIU,42,26.8,133\nNetherlands,NLD,25,8.9,236\nNorway,NOR,17,23.6,172\nNepal,NPL,25,41.3,57\nNauru,NRU,71,26.2,86\nNew Zealand,NZL,40,22.0,99\nOman,OMN,77,2.7,60\nPakistan,PAK,52,47.0,140\nPanama,PAN,57,42.9,214\nPitcairn Islands,PCN,49,35.9,262\nPeru,PER,70,7.3,187\nPhilippines,PHL,82,8.8,79\nPalau,PLW,81,4.9,102\nPapua New Guinea,PNG,59,40.2,233\nPoland,POL,39,39.5,229\nPuerto Rico,PRI,66,7.9,78\nNorth Korea,PRK,14,33.1,181\nPortugal,PRT,78,17.2,178\nParaguay,PRY,37,10.1,210\nPalestine,PSE,32,14.4,199\nFrench Polynesia,PYF,89,46.7,3\nQatar,QAT,43,32.2,275\nRéunion,REU,61,9.8,57\nRomania,ROU,22,19.0,248\nRussian Federation,RUS,74,17.9,151\nRwanda,RWA,65,41.4,271\nSaudi Arabia,SAU,27,44.6,18\nSudan,SDN,55,37.4,122\nSenegal,SEN,13,46.4,94\nSingapore,SGP,64,2.8,180\nSouth Georgia,SGS,48,37.7,123\nSvalbard and Jan Mayen,SJM,81,33.3,212\nSolomon Islands,SLB,76,10.9,183\nSierra Leone,SLE,17,8.9,298\nEl Salvador,SLV,60,41.1,286\nSan Marino,SMR,50,22.8,207\nSomalia,SOM,45,34.0,215\nSaint Pierre and Miquelon,SPM,28,21.3,76\nSerbia,SRB,88,34.8,232\nSouth Sudan,SSD,45,44.0,249\nSão Tomé and Príncipe,STP,23,10.4,169\nSuriname,SUR,74,8.2,143\nSlovakia,SVK,70,44.5,114\nSlovenia,SVN,71,17.4,86\nSweden,SWE,51,2.6,189\nEswatini,SWZ,54,45.1,222\nSint Maarten,SXM,45,43.0,192\nSeychelles,SYC,38,27.1,129\nSyrian Arab Republic,SYR,61,48.7,11\nTurks and Caicos Islands,TCA,22,12.6,181\nChad,TCD,88,47.8,91\nTogo,TGO,70,19.9,11\nThailand,THA,67,22.6,235\nTajikistan,TJK,27,3.1,213\nTokelau,TKL,30,8.8,129\nTurkmenistan,TKM,65,21.0,34\nTimor-Leste,TLS,65,12.5,35\nTonga,TON,40,40.2,220\nTrinidad and Tobago,TTO,54,6.6,132\nTunisia,TUN,25,22.3,253\nTürkiye,TUR,33,30.1,117\nTuvalu,TUV,78,42.5,147\nTaiwan,TWN,24,11.3,221\nTanzania,TZA,55,7.2,34\nUganda,UGA,59,48.1,215\nUkraine,UKR,42,38.8,222\nUnited States Minor Outlying Islands,UMI,35,0.3,255\nUruguay,URY,65,16.9,23\nUnited States,USA,13,35.9,105\nUzbekistan,UZB,46,14.4,144\nVatican City,VAT,78,33.2,159\nSaint Vincent and the Grenadines,VCT,14,17.4,171\n\"Venezuela, RB\",VEN,69,26.4,117\nBritish Virgin Islands,VGB,66,8.9,65\nUnited States Virgin Islands,VIR,16,28.4,218\nViet Nam,VNM,33,24.6,194\nVanuatu,VUT,38,7.6,201\nWallis and Futuna,WLF,49,17.8,84\nSamoa,WSM,75,43.8,14\n\"Yemen, Rep.\",YEM,63,4.1,222\nSouth Africa,ZAF,77,16.0,178\nZambia,ZMB,54,28.6,185\nZimbabwe,ZWE,20,24.8,11\nSub-Saharan Africa,,33,12.0,\nGlobal average,,43,20.5,",
+    "url": "https://docs.google.com/spreadsheets/d/1vErJwnncaqEO2O7t6SGofA7woqhCQDrE/edit?gid=1953921657#gid=1953921657",
+    "live": true,
+    "fileName": "map-test-data.csv"
+  },
+  "transpose": false,
+  "firstRowLabel": true,
+  "columns": {
+    "Test score (0-100)": {
+      "hidden": true
+    },
+    "Test count": {
+      "hidden": true
+    }
+  },
+  "annotations": [],
+  "refine": {
+    "labelCol": "",
+    "palette": "datapott",
+    "colors": {},
+    "colorBy": "auto",
+    "sort": "none",
+    "valueLabels": true,
+    "decimals": "auto",
+    "height": 400,
+    "panelsPerRow": 4,
+    "panelHeight": 180,
+    "rotateLabels": "auto",
+    "grid": true,
+    "tableBars": true,
+    "prefix": "",
+    "suffix": "",
+    "thousands": true,
+    "axisMin": "",
+    "axisMax": "",
+    "highlight": [],
+    "tooltips": true,
+    "labelMode": "all",
+    "mapRegion": "world",
+    "mapValue": "",
+    "mapScheme": "greens",
+    "mapScale": "linear",
+    "mapSteps": 5,
+    "mapBreaks": "",
+    "mapReverse": false,
+    "mapMaxRadius": 24
+  },
+  "layout": {
+    "dataDownload": true,
+    "attribution": true,
+    "dark": false,
+    "previewWidth": 644,
+    "logo": "datapott",
+    "logoUrl": "assets/logo.png"
+  },
+  "createdAt": 1795161353155,
+  "updatedAt": 1795169227710,
+  "publishedVersion": 1
+}
