@@ -23,9 +23,94 @@
   /* ------------------------------ routing ------------------------------ */
   function route() {
     const parts = location.hash.replace(/^#\/?/, "").split("/");
-    $("#nav-dash").classList.toggle("active", parts[0] !== "edit");
+    $("#nav-dash").classList.toggle("active", parts[0] !== "edit" && parts[0] !== "settings");
+    $("#nav-set").classList.toggle("active", parts[0] === "settings");
     if (parts[0] === "edit" && parts[1]) openEditor(parts[1], Number(parts[2]) || 1);
+    else if (parts[0] === "settings") settingsView();
     else dashboard();
+  }
+
+  /* ------------------------------ cloud status ------------------------------ */
+  function showCloudStatus() {
+    const n = $("#cloudstat");
+    if (!n) return;
+    if (!DP.cloud.connected()) { n.innerHTML = ""; return; }
+    const st = DP.cloud.status || (DP.cloud.draftsOn() ? "Saved to GitHub" : "GitHub connected");
+    n.className = "cloudstat" + (st.startsWith("⚠") ? " warn" : "");
+    n.textContent = (st.startsWith("⚠") ? "" : "☁ ") + st;
+    n.title = st;
+  }
+  DP.cloud.onChange(showCloudStatus);
+
+  let pulledOnce = false;
+  async function pullDrafts(force) {
+    if (!DP.cloud.draftsOn() || (pulledOnce && !force)) return;
+    pulledOnce = true;
+    try {
+      const changed = await DP.cloud.pull();
+      const onDashboard = !location.hash || location.hash === "#" || location.hash === "#/";
+      if (changed && onDashboard) dashboard();
+    } catch (e) { DP.cloud.setStatus("⚠ Could not reach GitHub: " + e.message); }
+  }
+
+  /* ------------------------------ settings ------------------------------ */
+  function settingsView() {
+    const s = DP.cloud.settings();
+    // Guess owner/repo when the site runs on <owner>.github.io/<repo>/
+    if (!s.owner && /\.github\.io$/.test(location.hostname)) {
+      s.owner = location.hostname.split(".")[0];
+      s.repo = location.pathname.split("/").filter(Boolean)[0] || "";
+    }
+    app.innerHTML = `
+      <div class="dash-head"><h2>Settings</h2></div>
+      <div class="settings panel">
+        <div class="pub-section">
+          <h4>☁ Connect to GitHub (one-click publishing and online drafts)</h4>
+          <p class="hint">Datapott Charts saves into your own GitHub repositories. It needs an <b>access token</b>: a password that only works for the repositories you choose. The token stays in this browser only.</p>
+          <details ${DP.cloud.connected() ? "" : "open"}><summary><b>How to create the token (once, about 3 minutes)</b></summary>
+            <ol class="steps-list">
+              <li><b>Optional but recommended:</b> create a <b>private</b> repository for drafts: GitHub → <b>+ → New repository</b>, name <code>datapott-charts-drafts</code>, choose <b>Private</b>, tick <b>Add a README file</b>, click <b>Create repository</b>.</li>
+              <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a> (GitHub → your picture → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token).</li>
+              <li>Token name: <code>Datapott Charts</code>. Expiration: <b>1 year</b> (put a reminder in your calendar).</li>
+              <li>Repository access: <b>Only select repositories</b> → pick <b>${esc(s.repo || "Datapott-Charts")}</b> and <b>datapott-charts-drafts</b>.</li>
+              <li>Permissions → Repository permissions → <b>Contents: Read and write</b>. Leave everything else as it is.</li>
+              <li>Click <b>Generate token</b>, copy it (it starts with <code>github_pat_</code>) and paste it below.</li>
+            </ol>
+          </details>
+          <div class="row">
+            <div><label class="field">GitHub username</label><input type="text" id="gowner" value="${esc(s.owner)}" placeholder="wandetos"/></div>
+            <div><label class="field">Website repository</label><input type="text" id="grepo" value="${esc(s.repo)}" placeholder="Datapott-Charts"/></div>
+            <div style="flex:0 0 90px"><label class="field">Branch</label><input type="text" id="gbranch" value="${esc(s.branch)}"/></div>
+          </div>
+          <label class="field">Drafts repository (private) <span class="hint">leave empty to keep drafts only in this browser</span></label>
+          <input type="text" id="gdrafts" value="${esc(s.draftsRepo)}" placeholder="datapott-charts-drafts"/>
+          <label class="field">Access token</label>
+          <input type="password" id="gtoken" value="${esc(s.token)}" placeholder="github_pat_…" autocomplete="off"/>
+          <div class="row" style="gap:8px;margin-top:12px">
+            <button class="btn" id="gsave" style="flex:0 0 auto">Save and test connection</button>
+            ${DP.cloud.connected() ? `<button class="btn ghost" id="gsync" style="flex:0 0 auto">⟳ Sync drafts now</button><button class="btn danger" id="gdisc" style="flex:0 0 auto">Disconnect</button>` : ""}
+          </div>
+          <div id="gmsg" class="hint"></div>
+          <p class="hint">⚠ Only connect on your own computer. Anyone who uses this browser could publish charts. You can cancel the token any time on GitHub.</p>
+        </div>
+      </div>`;
+    $("#gsave").onclick = async () => {
+      const ns = Object.assign(DP.cloud.settings(), {
+        owner: $("#gowner").value.trim(), repo: $("#grepo").value.trim(), branch: $("#gbranch").value.trim() || "main",
+        draftsRepo: $("#gdrafts").value.trim(), token: $("#gtoken").value.trim(),
+      });
+      if (!ns.owner || !ns.repo || !ns.token) { $("#gmsg").innerHTML = '<span class="error">Fill in username, website repository and token.</span>'; return; }
+      DP.cloud.saveSettings(ns);
+      $("#gmsg").textContent = "Testing…";
+      try {
+        const lines = await DP.cloud.test();
+        $("#gmsg").innerHTML = '<span class="ok">✔ Connected.</span><br/>' + lines.map(esc).join("<br/>");
+        if (DP.cloud.draftsOn()) { pulledOnce = false; await pullDrafts(true); $("#gmsg").innerHTML += "<br/>✔ Drafts synced."; }
+      } catch (e) { $("#gmsg").innerHTML = `<span class="error">${esc(e.message)}</span>`; }
+      showCloudStatus();
+    };
+    if ($("#gsync")) $("#gsync").onclick = async () => { $("#gmsg").textContent = "Syncing…"; await pullDrafts(true); await DP.cloud.flush(); $("#gmsg").innerHTML = '<span class="ok">✔ ' + esc(DP.cloud.status) + "</span>"; };
+    if ($("#gdisc")) $("#gdisc").onclick = () => { if (confirm("Disconnect GitHub on this computer? Your charts stay in this browser and on GitHub.")) { DP.cloud.disconnect(); settingsView(); } };
   }
   window.addEventListener("hashchange", route);
   $("#nav-new").onclick = () => newChart();
@@ -43,6 +128,7 @@
 
   /* ------------------------------ dashboard ------------------------------ */
   function dashboard() {
+    pullDrafts();
     const all = DP.store.list();
     const folders = Array.from(new Set(all.map((c) => c.folder).filter(Boolean))).sort();
     const shown = S.folder ? all.filter((c) => c.folder === S.folder) : all;
@@ -64,6 +150,7 @@
           <div class="card" data-id="${c.id}">
             <h3 title="${esc(c.title)}">${esc(c.title || "Untitled chart")}</h3>
             <div class="meta">${esc((DP.CHART_TYPES.find((x) => x.id === c.type) || {}).name || "")} · edited ${timeAgo(c.updatedAt)}${c.folder ? " · " + esc(c.folder) : ""}</div>
+            <div class="badge ${pubState(c)}">${{ new: "Draft", ok: "Published", changed: "Published · changed" }[pubState(c)]}</div>
             <div class="thumb">${icon(c.type)}</div>
             <div class="actions">
               <button class="btn ghost small" data-dup="${c.id}">Duplicate</button>
@@ -639,6 +726,23 @@
       `<script>window.addEventListener("message",function(e){if(e.data&&e.data.type==="datapott-height"){document.querySelectorAll("iframe[data-datapott-id]").forEach(function(f){if(f.contentWindow===e.source){f.style.height=e.data.height+"px";}});}});<\/script>`;
   }
 
+  /** Fingerprint of everything that affects how the chart looks (to spot unpublished changes). */
+  function contentHash(cfg) {
+    const c = Object.assign({}, cfg);
+    ["updatedAt", "createdAt", "publishedAt", "publishedHash", "publishedVersion", "folder"].forEach((k) => delete c[k]);
+    c.layout = Object.assign({}, c.layout);
+    delete c.layout.previewWidth;
+    const str = JSON.stringify(c);
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) h = ((h * 33) ^ str.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function pubState(cfg) {
+    cfg = cfg || S.cfg;
+    if (!cfg.publishedHash) return "new";
+    return cfg.publishedHash === contentHash(cfg) ? "ok" : "changed";
+  }
+
   function stepPublish(body) {
     const base = new URL("chart.html", location.href.split("#")[0]).href;
     const permUrl = base + "?id=" + encodeURIComponent(S.cfg.id);
@@ -646,10 +750,18 @@
       <div class="editor">
         <div class="panel">
           <div class="pub-section">
-            <h4>1. Permanent link (best for datapott.org articles)</h4>
-            <p class="hint">Download the chart file, then upload it into the <code>charts/</code> folder of your GitHub repository. After about a minute the link below works for everyone.</p>
+            <h4>1. Publish (permanent link for datapott.org articles)</h4>
+            ${DP.cloud.connected() ? `
+              <div class="pubstate ${pubState()}">${{ new: "Not published yet.", ok: "✔ Published. The live chart matches what you see.", changed: "✎ Published, but changed since. Republish to update every article that embeds it." }[pubState()]}</div>
+              <button class="btn big" id="pubbtn">${pubState() === "new" ? "🚀 Publish" : "🔄 Republish"}</button>
+              <div id="pubmsg" class="hint"></div>`
+            : `<p class="hint">Connect GitHub once in <a href="#/settings">⚙ Settings</a> to publish with one click. Until then, use the manual steps further down.</p>`}
+            <label class="field">Chart ID (part of the link)</label>
             <div class="row"><input type="text" id="cid" value="${esc(S.cfg.id)}"/><button class="btn ghost small" id="renid" style="flex:0 0 auto">Rename ID</button></div>
-            <button class="btn" id="dljson" style="margin-top:8px">⬇ Download ${esc(S.cfg.id)}.json</button>
+            <details ${DP.cloud.connected() ? "" : "open"} style="margin-top:8px"><summary>Manual publishing (download the file and upload it to GitHub yourself)</summary>
+              <p class="hint">Download the chart file, then upload it into the <code>charts/</code> folder of your GitHub repository. After about a minute the link below works for everyone.</p>
+              <button class="btn ghost" id="dljson">⬇ Download ${esc(S.cfg.id)}.json</button>
+            </details>
             <label class="field">Link to your visualization</label>
             <div class="row"><input type="text" readonly value="${esc(permUrl)}" id="plink"/><button class="btn ghost small" data-copy="plink" style="flex:0 0 auto">Copy</button></div>
             <label class="field">Embed code (responsive iframe)</label>
@@ -690,6 +802,23 @@
     $("#dljson").onclick = () => {
       const out = Object.assign({}, S.cfg);
       download(S.cfg.id + ".json", JSON.stringify(out, null, 2), "application/json");
+    };
+    if ($("#pubbtn")) $("#pubbtn").onclick = async (e) => {
+      const btn = e.target;
+      btn.disabled = true;
+      $("#pubmsg").textContent = "Publishing to GitHub…";
+      try {
+        const v = await DP.cloud.publish(S.cfg);
+        S.cfg.publishedVersion = v;
+        S.cfg.publishedHash = contentHash(S.cfg);
+        S.cfg.publishedAt = Date.now();
+        persist();
+        stepPublish(body);
+        $("#pubmsg").innerHTML = `<span class="ok">✔ Published (version ${v}). GitHub Pages updates the live link in about 1 minute.</span> <a href="${esc(permUrl)}" target="_blank" rel="noopener">Open live chart ↗</a>`;
+      } catch (err) {
+        btn.disabled = false;
+        $("#pubmsg").innerHTML = `<span class="error">${esc(err.message)}</span>`;
+      }
     };
     $("#renid").onclick = () => {
       const nid = $("#cid").value.trim().toLowerCase().replace(/[^a-z0-9-_]+/g, "-").replace(/^-+|-+$/g, "");
@@ -760,4 +889,5 @@
   }
 
   route();
+  showCloudStatus();
 })(window.DP);

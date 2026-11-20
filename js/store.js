@@ -32,16 +32,20 @@ window.DP = window.DP || {};
     get(id) {
       return readAll()[id] || null;
     },
-    save(cfg) {
+    /** opts.keepTime: keep cfg.updatedAt (used when downloading from GitHub); opts.silent: don't upload */
+    save(cfg, opts) {
+      opts = opts || {};
       const all = readAll();
-      cfg.updatedAt = Date.now();
+      if (!opts.keepTime) cfg.updatedAt = Date.now();
       all[cfg.id] = cfg;
       writeAll(all);
+      if (!opts.silent && DP.cloud) DP.cloud.queue(cfg.id, cfg);
     },
-    remove(id) {
+    remove(id, opts) {
       const all = readAll();
       delete all[id];
       writeAll(all);
+      if (!(opts && opts.silent) && DP.cloud) DP.cloud.queue(id, null);
     },
     newId() {
       const chars = "abcdefghijkmnpqrstuvwxyz23456789";

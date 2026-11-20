@@ -39,10 +39,10 @@ We build in phases. Each phase ends with something that works and is live on dat
 - [ ] Election donut, waterfall and dual-axis charts (Datawrapper Business features, free here)
 
 ## Phase 3: Accounts and online saving
-- [ ] Move saving from the browser into an online database (Supabase: database + login, has a free tier)
-      Alternative: PHP + MySQL on the existing Namecheap hosting
-- [ ] Log in from any device; drafts follow you
-- [ ] One-click Publish (no more uploading .json files to GitHub)
+- [x] One-click Publish / Republish straight into the GitHub repository (Settings → Connect to GitHub)
+- [x] "Published · changed" status on charts edited after publishing
+- [x] Drafts saved automatically to a private GitHub repository; they follow you to any computer
+- [ ] Multi-user logins for a team (Supabase or similar), when needed
 - [ ] Edit history and comments
 - [ ] Team members (co-authors, students, partners)
 

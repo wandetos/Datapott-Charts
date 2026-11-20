@@ -113,6 +113,17 @@ Your links are now:
 
 ---
 
+## STEP 5a. Connect GitHub once (one-click publishing)
+
+Open the site → **⚙ Settings** and follow the steps on that page:
+1. Create a **private** repository called `datapott-charts-drafts` (for your drafts).
+2. Create a **fine-grained access token** with **Contents: Read and write** on `Datapott-Charts`
+   and `datapott-charts-drafts`.
+3. Paste the token, click **Save and test connection**.
+
+From then on, Step 4 has a **🚀 Publish** button, and drafts are saved to GitHub automatically.
+Do this on each computer you use (the token is stored only in that browser).
+
 ## STEP 5. Your everyday workflow
 
 1. Prepare data in Google Sheets (variable names in row 1). Share it: **Anyone with the link → Viewer**.
@@ -123,8 +134,8 @@ Your links are now:
    source), Layout (footer, dark mode, folder).
 5. **Publish & Embed**:
    * Click **Rename ID** to give a readable name, e.g. `hiv-funding-2026`.
-   * Click **Download hiv-funding-2026.json**.
-   * On GitHub open the `charts` folder → **Add file → Upload files** → drop the .json → **Commit**.
+   * Click **🚀 Publish** (if GitHub is connected). Otherwise use "Manual publishing": download the
+     .json and upload it to the `charts` folder on GitHub.
    * After about a minute, copy the **embed code** and paste it into your datapott.org article
      (in WordPress use a **Custom HTML** block). The chart resizes itself on phones.
    * Or download a PNG/SVG for social media and Word documents.
