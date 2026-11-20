@@ -4,13 +4,17 @@
   "private": true,
   "description": "Datapott Charts: a free chart maker for Datapott Analytics",
   "scripts": {
-    "start": "npx http-server -p 8080 -c-1"
+    "start": "npx http-server -p 8080 -c-1",
+    "build-geo": "node tools/build-geo.js"
   },
   "dependencies": {
     "@observablehq/plot": "^0.6.17",
     "d3": "^7.9.0",
     "html-to-image": "^1.11.13",
     "papaparse": "^5.5.3",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2",
+    "world-countries": "^5.1.0",
     "xlsx": "^0.18.5"
   }
 }

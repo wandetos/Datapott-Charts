@@ -33,6 +33,8 @@ window.DP = window.DP || {};
     { id: "donut", name: "Donut Chart", icon: "◯" },
     { id: "multiple-donuts", name: "Multiple Donuts", icon: "◯◯" },
     { id: "table", name: "Table", icon: "▦" },
+    { id: "map-choropleth", name: "Choropleth Map", icon: "🗺" },
+    { id: "map-symbols", name: "Symbol Map", icon: "◉" },
   ];
 
   DP.defaultConfig = function () {
@@ -74,6 +76,14 @@ window.DP = window.DP || {};
         highlight: [],
         tooltips: true,
         labelMode: "all", // all | firstlast | last
+        mapRegion: "world",
+        mapValue: "",
+        mapScheme: "greens",
+        mapScale: "linear", // linear | quantize | quantile | breaks
+        mapSteps: 5,
+        mapBreaks: "",
+        mapReverse: false,
+        mapMaxRadius: 24,
       },
       layout: {
         dataDownload: true,
@@ -133,6 +143,8 @@ window.DP = window.DP || {};
     const pre = r.prefix || "", suf = r.suffix || "";
     return (v) => (v < 0 ? "\u2212" : "") + pre + f(Math.abs(v)) + suf;
   }
+
+  DP.axisFormatter = axisFormatter;
 
   /** Value-axis options: custom min/max range and formatted ticks. */
   function valueAxis(cfg, values, extra) {
@@ -709,6 +721,10 @@ window.DP = window.DP || {};
       else if (!p.valueCols.length) throw new Error("No number columns found. Check step 2: number columns should be blue.");
       else if (t === "scatter" && p.valueCols.length < 2) throw new Error("A scatter plot needs two number columns.");
       else if ((t === "range" || t === "arrow") && p.valueCols.length < 2) throw new Error("This chart needs two number columns (start and end).");
+      else if (t.startsWith("map-")) {
+        if (!DP.renderMap) throw new Error("Map code (js/maps.js) is not loaded on this page.");
+        out = DP.renderMap(cfg, p, ds, width, () => DP.renderChart(container, cfg, ds, opts));
+      }
       else if (t === "bar" || t === "stacked-bars" || t === "grouped-bars") out = barChart(cfg, p, width, t);
       else if (t === "column" || t === "stacked-columns" || t === "grouped-columns") out = columnChart(cfg, p, width, t);
       else if (t === "multiple-columns" || t === "multiple-lines") out = multiplePanels(cfg, p, width, t);
@@ -721,6 +737,7 @@ window.DP = window.DP || {};
       if (legend) legendSlot.appendChild(legend);
       body.appendChild(out.node);
       body.dataset.linked = ["multiple-columns", "multiple-lines", "multiple-donuts"].includes(cfg.type) ? "1" : "";
+      body.dataset.map = out.map ? "1" : "";
     } catch (err) {
       console.error(err);
       body.appendChild(el("div", { class: "dp-empty", text: err.message }));

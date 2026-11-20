@@ -19,7 +19,11 @@ We build in phases. Each phase ends with something that works and is live on dat
 - [x] Live Google Sheets: published charts re-read the sheet on every view
 
 ## Phase 2: Datawrapper-level polish
-- [ ] Maps: world and Africa choropleth maps (d3-geo + Natural Earth), symbol maps, locator maps
+- [x] Choropleth maps: World, Africa + 5 African sub-regions, MENA, Europe, Asia, Americas, Latin America, Oceania
+- [x] Symbol (bubble) maps with size legend
+- [x] Country matching by name or ISO code (World Bank / UN / TI spellings), with a report of unmatched rows
+- [x] Colour scales: continuous, equal steps, quantiles, own break points; 12 colour schemes; reverse
+- [ ] Locator maps, country labels on maps, sub-national maps (e.g. Kenya counties)
 - [x] Instant hover tooltips on every chart type (also works by tapping on phones)
 - [x] Linked hover in multi-panel charts: the same year/category lights up in every panel
 - [x] Value labels: all, first and last, last only, or hidden; year axes show first and last year

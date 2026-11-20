@@ -59,3 +59,14 @@
 .dp-dark .dp-linklabel { background: rgba(30,31,34,.85); }
 .dp-linklabel.b { font-weight: 700; }
 .dp-hovering[data-linked="1"] g[aria-label="text"] { opacity: .12; }
+
+/* Maps */
+.dp-map figure { margin: 0; }
+.dp-map svg[class*="-ramp"], .dp-map div[class*="-swatches"] { margin-bottom: 6px; }
+.dp-map-legend { font-size: 11px; margin-bottom: 4px; }
+.dp-map-legend-title { font-weight: 700; margin-bottom: 2px; }
+.dp-body[data-map="1"].dp-hovering path[data-dp]:not(.dp-on) { opacity: 1; }
+.dp-body[data-map="1"] path.dp-on { stroke: #1d1d1d; stroke-width: 1.5px; }
+.dp-body[data-map="1"].dp-hovering circle[data-dp]:not(.dp-on) { opacity: .5; }
+.dp-map-nodata { font-size: 11px; color: var(--dp-muted); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
+.dp-map-nodata i { width: 12px; height: 12px; background: #cfcfcf; border-radius: 2px; display: inline-block; }

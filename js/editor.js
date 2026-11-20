@@ -202,7 +202,8 @@
     if (mode === "paste") {
       right = `<label class="field">Paste your table here (from Excel, Google Sheets, or CSV text)</label>
         <textarea id="pastebox" rows="14" placeholder="Region,2024,2025&#10;Africa,32,33&#10;Europe,64,65">${esc(d.text)}</textarea>
-        <div class="row" style="margin-top:8px"><button class="btn ghost small" id="sample" style="flex:0 0 auto">Load sample data</button><span class="hint">Sample: your CPI regional comparison</span></div>`;
+        <div class="row" style="margin-top:8px"><button class="btn ghost small" id="sample" style="flex:0 0 auto">Load sample data</button><span class="hint">Sample: your CPI regional comparison</span></div>
+        <div class="row" style="margin-top:6px"><button class="btn ghost small" id="mapsample" style="flex:0 0 auto">Load map test data</button><span class="hint">Every country with made-up test values (not real data)</span></div>`;
     } else if (mode === "upload") {
       right = `<label class="field">Choose a .csv, .xlsx or .xls file (first sheet is used)</label>
         <input type="file" id="filein" accept=".csv,.tsv,.txt,.xlsx,.xls,.ods" />
@@ -234,6 +235,16 @@
     };
     if (mode === "paste") {
       $("#pastebox").oninput = (e) => setText(e.target.value);
+      $("#mapsample").onclick = async () => {
+        await DP.loadGeo("110m");
+        let seed = 7;
+        const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+        const rows = DP.geo.meta.filter((m) => m.num && m.r !== "Antarctic").map((m) => `"${m.n}",${m.a3},${Math.round(10 + rnd() * 80)},${Math.round(rnd() * 500) / 10}`);
+        const text = "Country,ISO3,Test score,Test rate (%)\n" + rows.join("\n");
+        $("#pastebox").value = text;
+        setText(text);
+        change((c) => { c.title = "Map test (made-up values, not real data)"; c.type = "map-choropleth"; c.refine.mapValue = "Test score"; c.notes = "Test values for trying the map. Not real data."; }, { panel: true });
+      };
       $("#sample").onclick = () => {
         $("#pastebox").value = SAMPLE;
         setText(SAMPLE);
@@ -331,7 +342,7 @@
     $$("[data-tab]", body).forEach((b) => (b.onclick = () => { S.tab = b.dataset.tab; renderEditor(); }));
     const tb = $("#tabbody");
     if (S.tab === "type") tabType(tb);
-    else if (S.tab === "refine") tabRefine(tb);
+    else if (S.tab === "refine") (S.cfg.type.startsWith("map-") ? tabRefineMap(tb) : tabRefine(tb));
     else if (S.tab === "annotate") tabAnnotate(tb);
     else tabLayout(tb);
     bindPreview(body);
@@ -433,6 +444,82 @@
     if ($("#ppr", tb)) $("#ppr", tb).oninput = (e) => { $("#pprv").textContent = e.target.value; change((c) => (c.refine.panelsPerRow = Number(e.target.value))); };
     if ($("#ph", tb)) $("#ph", tb).oninput = (e) => change((c) => (c.refine.panelHeight = Number(e.target.value) || 180));
     if ($("#hgt", tb)) $("#hgt", tb).oninput = (e) => change((c) => (c.refine.height = Number(e.target.value) || 400));
+  }
+
+  function tabRefineMap(tb) {
+    const r = S.cfg.refine;
+    const t = S.cfg.type;
+    const vis = S.ds.columns.filter((c) => !c.hidden);
+    const nums = vis.filter((c) => c.type === "number");
+    const sel = (id, val, opts) => `<select id="${id}">${opts.map((o) => `<option value="${esc(o[0])}" ${String(val) === String(o[0]) ? "selected" : ""}>${esc(o[1])}</option>`).join("")}</select>`;
+    const scale = r.mapScale || "linear";
+    tb.innerHTML = `
+      <h3>Data</h3>
+      <label class="field">Country column (country names or ISO codes like KEN, NGA)</label>
+      ${sel("labelCol", r.labelCol, [["", "Auto (first text column)"]].concat(vis.map((c) => [c.name, c.name])))}
+      <label class="field">Value to show on the map</label>
+      ${sel("mapValue", r.mapValue, [["", "Auto (first number column)"]].concat(nums.map((c) => [c.name, c.name])))}
+      <div id="matchrep" class="hint">Checking country names…</div>
+      <h3 style="margin-top:18px">Map</h3>
+      <label class="field">Region</label>
+      ${sel("mapRegion", r.mapRegion, DP.MAP_REGIONS.map((x) => [x.id, x.name]))}
+      ${t === "map-choropleth" ? `
+        <label class="field">Colour scheme</label>
+        ${sel("mapScheme", r.mapScheme, DP.MAP_SCHEMES)}
+        <label class="check"><input type="checkbox" id="mapReverse" ${r.mapReverse ? "checked" : ""}/> Reverse colours</label>
+        <label class="field">Colour scale</label>
+        ${sel("mapScale", scale, [["linear", "Continuous gradient"], ["quantize", "Steps: equal intervals"], ["quantile", "Steps: equal number of countries"], ["breaks", "Steps: my own break points"]])}
+        ${scale === "quantize" || scale === "quantile" ? `<label class="field">Number of steps</label><input type="number" id="mapSteps" min="2" max="9" value="${esc(r.mapSteps)}"/>` : ""}
+        ${scale === "breaks" ? `<label class="field">Break points (comma separated)</label><input type="text" id="mapBreaks" value="${esc(r.mapBreaks)}" placeholder="e.g. 20, 40, 60, 80"/>` : ""}
+        ${scale === "linear" || scale === "quantize" ? `<label class="field">Colour range <span class="hint">(empty = data min and max; CPI: 0 to 100)</span></label>
+          <div class="row"><input type="number" id="amin" value="${esc(r.axisMin)}" placeholder="min"/><input type="number" id="amax" value="${esc(r.axisMax)}" placeholder="max"/></div>` : ""}`
+      : `
+        <label class="field">Circle colour</label>
+        <input type="color" id="symcol" value="${(r.colors && r.colors.__single__) || (DP.PALETTES[r.palette] || DP.PALETTES.datapott)[0]}"/>
+        <label class="field">Largest circle size: <b id="mrv">${esc(r.mapMaxRadius)}</b> px</label>
+        <input type="range" id="mapMaxRadius" min="8" max="60" value="${esc(r.mapMaxRadius)}" style="width:100%"/>`}
+      <h3 style="margin-top:18px">Number format</h3>
+      <div class="row">
+        <div><label class="field">Prefix</label><input type="text" id="prefix" value="${esc(r.prefix)}" placeholder="e.g. $"/></div>
+        <div><label class="field">Suffix</label><input type="text" id="suffix" value="${esc(r.suffix)}" placeholder="e.g. %"/></div>
+      </div>
+      <div class="row">
+        <div><label class="field">Decimals</label>${sel("decimals", r.decimals, [["auto", "Auto"], [0, "0"], [1, "1"], [2, "2"], [3, "3"]])}</div>
+        <div><label class="check" style="margin-top:30px"><input type="checkbox" id="thou" ${r.thousands !== false ? "checked" : ""}/> 1,000 separator</label></div>
+      </div>
+      <label class="check"><input type="checkbox" id="tips" ${r.tooltips !== false ? "checked" : ""}/> Tooltips on hover</label>`;
+
+    const bindSel = (id, key, panel) => { const n = $("#" + id, tb); if (n) n.onchange = (e) => change((c) => (c.refine[key] = e.target.value), { panel }); };
+    bindSel("labelCol", "labelCol", true);
+    bindSel("mapValue", "mapValue");
+    bindSel("mapRegion", "mapRegion");
+    bindSel("mapScheme", "mapScheme");
+    bindSel("mapScale", "mapScale", true);
+    bindSel("decimals", "decimals");
+    const bindIn = (id, key, num) => { const n = $("#" + id, tb); if (n) n.oninput = (e) => change((c) => (c.refine[key] = num ? Number(e.target.value) : e.target.value)); };
+    bindIn("mapSteps", "mapSteps", true);
+    bindIn("mapBreaks", "mapBreaks");
+    bindIn("amin", "axisMin");
+    bindIn("amax", "axisMax");
+    bindIn("prefix", "prefix");
+    bindIn("suffix", "suffix");
+    if ($("#mapReverse", tb)) $("#mapReverse", tb).onchange = (e) => change((c) => (c.refine.mapReverse = e.target.checked));
+    if ($("#mapMaxRadius", tb)) $("#mapMaxRadius", tb).oninput = (e) => { $("#mrv").textContent = e.target.value; change((c) => (c.refine.mapMaxRadius = Number(e.target.value))); };
+    if ($("#symcol", tb)) $("#symcol", tb).oninput = (e) => change((c) => (c.refine.colors.__single__ = e.target.value));
+    $("#thou", tb).onchange = (e) => change((c) => (c.refine.thousands = e.target.checked));
+    $("#tips", tb).onchange = (e) => change((c) => (c.refine.tooltips = e.target.checked));
+
+    // country match report
+    DP.loadGeo("110m").then(() => {
+      const box = $("#matchrep", tb);
+      if (!box) return;
+      const label = vis.find((c) => c.name === r.labelCol) || vis.find((c) => c.type !== "number") || vis[0];
+      if (!label) { box.textContent = ""; return; }
+      const rep = DP.mapMatchReport(S.ds, label.name);
+      box.innerHTML = rep.unmatched.length
+        ? `<span class="ok">✔ ${rep.matched} of ${rep.total} rows matched a country.</span><br/><span class="error">Not matched (${rep.unmatched.length}): ${rep.unmatched.slice(0, 15).map(esc).join(", ")}${rep.unmatched.length > 15 ? "…" : ""}</span><br/>Rows like regions or "Global average" are fine to leave. For a country, use its English name or 3-letter ISO code.`
+        : `<span class="ok">✔ All ${rep.total} rows matched a country.</span>`;
+    });
   }
 
   function tabAnnotate(tb) {
