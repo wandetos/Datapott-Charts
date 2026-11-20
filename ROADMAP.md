@@ -20,7 +20,9 @@ We build in phases. Each phase ends with something that works and is live on dat
 
 ## Phase 2: Datawrapper-level polish
 - [ ] Maps: world and Africa choropleth maps (d3-geo + Natural Earth), symbol maps, locator maps
-- [x] Hover tooltips on every chart type (area charts still to do)
+- [x] Instant hover tooltips on every chart type (also works by tapping on phones)
+- [x] Linked hover in multi-panel charts: the same year/category lights up in every panel
+- [x] Value labels: all, first and last, last only, or hidden; year axes show first and last year
 - [x] Number formats: prefix/suffix (%, $, M), thousands, custom axis ranges
 - [x] Highlights (colour chosen bars/regions/lines, grey the rest)
 - [ ] Text annotations on the chart

@@ -395,7 +395,13 @@
       <div class="row"><input type="number" id="amin" value="${esc(r.axisMin)}" placeholder="min"/><input type="number" id="amax" value="${esc(r.axisMax)}" placeholder="max"/></div>`}
       <h3 style="margin-top:18px">Display</h3>
       <label class="check"><input type="checkbox" id="tips" ${r.tooltips !== false ? "checked" : ""}/> Tooltips on hover</label>
-      <label class="check"><input type="checkbox" id="vl" ${r.valueLabels ? "checked" : ""}/> Show value labels</label>
+      <label class="field">Value labels</label>
+      <select id="lmode">
+        <option value="all" ${r.valueLabels && (r.labelMode || "all") === "all" ? "selected" : ""}>Show all</option>
+        <option value="firstlast" ${r.valueLabels && r.labelMode === "firstlast" ? "selected" : ""}>First and last only</option>
+        <option value="last" ${r.valueLabels && r.labelMode === "last" ? "selected" : ""}>Last only</option>
+        <option value="none" ${!r.valueLabels ? "selected" : ""}>Hide</option>
+      </select>
       <label class="check"><input type="checkbox" id="grid" ${r.grid ? "checked" : ""}/> Grid lines</label>
       ${t === "table" ? `<label class="check"><input type="checkbox" id="tbars" ${r.tableBars ? "checked" : ""}/> Bars inside number cells</label>` : ""}
       ${isPanels ? `<h3 style="margin-top:18px">Panel layout</h3>
@@ -412,7 +418,10 @@
     bindSel("rot", "rotateLabels");
     $$("[data-ckey]", tb).forEach((inp) => (inp.oninput = (e) => change((c) => (c.refine.colors[inp.dataset.ckey] = e.target.value))));
     $("#resetcol", tb).onclick = () => change((c) => (c.refine.colors = {}), { panel: true });
-    $("#vl", tb).onchange = (e) => change((c) => (c.refine.valueLabels = e.target.checked));
+    $("#lmode", tb).onchange = (e) => change((c) => {
+      c.refine.valueLabels = e.target.value !== "none";
+      if (e.target.value !== "none") c.refine.labelMode = e.target.value;
+    });
     $("#tips", tb).onchange = (e) => change((c) => (c.refine.tooltips = e.target.checked));
     $("#thou", tb).onchange = (e) => change((c) => (c.refine.thousands = e.target.checked));
     $("#prefix", tb).oninput = (e) => change((c) => (c.refine.prefix = e.target.value));

@@ -41,3 +41,21 @@
 .dp-table .num { text-align: right; position: relative; min-width: 80px; }
 .dp-cellbar { position: absolute; left: 4px; top: 6px; bottom: 6px; opacity: 0.25; border-radius: 2px; max-width: calc(100% - 8px); }
 .dp-cellval { position: relative; }
+
+/* Hover tooltips */
+.dp-body { position: relative; }
+.dp-chart svg text { pointer-events: none; }
+.dp-tip { position: absolute; display: none; z-index: 20; pointer-events: none; background: #fff; color: #1d1d1d; border: 1px solid #d6d6d6; border-radius: 4px; box-shadow: 0 3px 12px rgba(0,0,0,.14); padding: 7px 10px; font-size: 12px; min-width: 120px; max-width: 280px; }
+.dp-tip-head { font-weight: 700; margin-bottom: 4px; }
+.dp-tip-row { display: flex; align-items: center; gap: 6px; line-height: 1.5; }
+.dp-tip-row i { width: 10px; height: 10px; border-radius: 2px; flex: 0 0 auto; }
+.dp-tip-row span { flex: 1; color: #555; }
+.dp-tip-row b { font-weight: 700; }
+.dp-tip-row.b span { color: #1d1d1d; font-weight: 700; }
+.dp-hovering [data-dp] { transition: opacity .08s; }
+.dp-hovering rect[data-dp]:not(.dp-on), .dp-hovering path[data-dp]:not(.dp-on) { opacity: .35; }
+.dp-ghost circle.dp-on { fill-opacity: 1; stroke: #fff; stroke-width: 1.5px; }
+.dp-linklabel { position: absolute; transform: translate(-50%, -100%); margin-top: -3px; font-size: 10.5px; color: var(--dp-text); background: rgba(255,255,255,.85); padding: 0 2px; border-radius: 2px; pointer-events: none; white-space: nowrap; z-index: 15; }
+.dp-dark .dp-linklabel { background: rgba(30,31,34,.85); }
+.dp-linklabel.b { font-weight: 700; }
+.dp-hovering[data-linked="1"] g[aria-label="text"] { opacity: .12; }

@@ -73,6 +73,7 @@ window.DP = window.DP || {};
         axisMax: "",
         highlight: [],
         tooltips: true,
+        labelMode: "all", // all | firstlast | last
       },
       layout: {
         dataDownload: true,
@@ -147,10 +148,32 @@ window.DP = window.DP || {};
     return o;
   }
 
-  /** Tooltip text for one data point. */
-  function tipText(fmt, multi) {
-    return (d) => (multi ? `${d.label}\n${d.series}: ${fmt(d.value)}` : `${d.label}: ${fmt(d.value)}`);
+  /** Hover info for one data point (read by DP.attachHover). k = key used to link panels. */
+  function hoverInfo(cfg, fmt, colors) {
+    if (cfg.refine.tooltips === false) return undefined;
+    return (d) => JSON.stringify({ k: String(d.label), h: String(d.label), s: d.series, v: fmt(d.value), c: colors.of(d) });
   }
+
+  /** Which value labels to show: all, first & last, or last (per series). */
+  function pickLabels(cfg, data) {
+    const mode = cfg.refine.labelMode || "all";
+    if (mode === "all") return data;
+    const groups = d3.group(data.filter((d) => !Number.isNaN(d.value)), (d) => d.series);
+    const out = [];
+    groups.forEach((arr) => {
+      if (mode !== "last" && arr.length) out.push(arr[0]);
+      if (arr.length > 1 || mode === "last") out.push(arr[arr.length - 1]);
+    });
+    return out;
+  }
+
+  /** Year axes like Datawrapper: when years would need rotating, show only the first and last year. */
+  function yearAxis(order, rotate) {
+    if (!rotate || order.length < 4 || !order.every((l) => /^\d{4}$/.test(l))) return null;
+    const first = order[0], last = order[order.length - 1];
+    return { tickRotate: 0, tickFormat: (d) => (d === first || d === last ? d : "") };
+  }
+
 
   /** Work out label column, value columns and sorted rows. */
   function prepare(cfg, ds) {
@@ -226,25 +249,24 @@ window.DP = window.DP || {};
     const data = kind === "bar" ? p.long.filter((d) => d.series === p.valueCols[0]) : p.long;
     const marks = [];
     let height;
-    const tipOn = cfg.refine.tooltips !== false;
-    const tt = tipText(fmt, kind !== "bar" && p.valueCols.length > 1);
+    const H = hoverInfo(cfg, fmt, colors);
     const opt = { width, marginLeft, marginRight: 40, style: baseStyle, color: { type: "identity" }, x: valueAxis(cfg, data.map((d) => d.value), { axis: "top" }) };
     if (kind === "grouped-bars") {
       height = order.length * (p.valueCols.length * 14 + 14) + 40;
       Object.assign(opt, { fy: { domain: order, label: null }, y: { axis: null, domain: p.valueCols, padding: 0.1 } });
-      marks.push(Plot.barX(data, { x: "value", y: "series", fy: "label", fill: colors.of, title: tt, tip: tipOn }));
-      if (cfg.refine.valueLabels) marks.push(Plot.text(data, { x: "value", y: "series", fy: "label", text: (d) => fmt(d.value), dx: 4, textAnchor: "start", fill: "currentColor" }));
+      marks.push(Plot.barX(data, { x: "value", y: "series", fy: "label", fill: colors.of, title: H }));
+      if (cfg.refine.valueLabels) marks.push(Plot.text(pickLabels(cfg, data), { x: "value", y: "series", fy: "label", text: (d) => fmt(d.value), dx: 4, textAnchor: "start", fill: "currentColor" }));
     } else if (kind === "stacked-bars") {
       height = order.length * 30 + 40;
       Object.assign(opt, { y: { domain: order, label: null, padding: 0.25 } });
-      marks.push(Plot.barX(data, Plot.stackX({ x: "value", y: "label", fill: colors.of, order: p.valueCols, z: "series", title: tt, tip: tipOn })));
-      if (cfg.refine.valueLabels) marks.push(Plot.text(data, Plot.stackX({ x: "value", y: "label", z: "series", order: p.valueCols, text: (d) => fmt(d.value), fill: "white" })));
+      marks.push(Plot.barX(data, Plot.stackX({ x: "value", y: "label", fill: colors.of, order: p.valueCols, z: "series", title: H })));
+      if (cfg.refine.valueLabels) marks.push(Plot.text(pickLabels(cfg, data), Plot.stackX({ x: "value", y: "label", z: "series", order: p.valueCols, text: (d) => fmt(d.value), fill: "white" })));
     } else {
       height = order.length * 30 + 40;
       Object.assign(opt, { y: { domain: order, label: null, padding: 0.25 } });
-      marks.push(Plot.barX(data, { x: "value", y: "label", fill: colors.of, title: tt, tip: tipOn }));
+      marks.push(Plot.barX(data, { x: "value", y: "label", fill: colors.of, title: H }));
       if (cfg.refine.valueLabels) {
-        marks.push(Plot.text(data.filter((d) => !(d.value < 0)), { x: "value", y: "label", text: (d) => fmt(d.value), dx: 4, textAnchor: "start", fill: "currentColor" }));
+        marks.push(Plot.text(pickLabels(cfg, data.filter((d) => !(d.value < 0))), { x: "value", y: "label", text: (d) => fmt(d.value), dx: 4, textAnchor: "start", fill: "currentColor" }));
         marks.push(Plot.text(data.filter((d) => d.value < 0), { x: "value", y: "label", text: (d) => fmt(d.value), dx: -4, textAnchor: "end", fill: "currentColor" }));
       }
     }
@@ -261,29 +283,29 @@ window.DP = window.DP || {};
     const colors = colorizer(cfg, p, multi);
     const data = kind === "column" ? p.long.filter((d) => d.series === p.valueCols[0]) : p.long;
     const rotate = shouldRotate(cfg, order, width - 60);
-    const marginBottom = rotate ? Math.min(240, d3.max(order, (l) => textWidth(l, 11)) + 10) : 30;
+    const marginBottom = rotate && !yearAxis(order, rotate) ? Math.min(240, d3.max(order, (l) => textWidth(l, 11)) + 10) : 30;
     const opt = {
       width, height: Number(cfg.refine.height) || 400, marginBottom, marginTop: 24, style: baseStyle,
       color: { type: "identity" },
       y: valueAxis(cfg, data.map((d) => d.value)),
     };
-    const tipOn = cfg.refine.tooltips !== false;
-    const tt = tipText(fmt, kind !== "column" && p.valueCols.length > 1);
+    const H = hoverInfo(cfg, fmt, colors);
+    const yAx = yearAxis(order, rotate);
     const marks = [];
     if (kind === "grouped-columns") {
       Object.assign(opt, { fx: { domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.15 }, x: { axis: null, domain: p.valueCols, padding: 0.05 } });
-      marks.push(Plot.barY(data, { x: "series", y: "value", fx: "label", fill: colors.of, title: tt, tip: tipOn }));
-      if (cfg.refine.valueLabels) marks.push(Plot.text(data, { x: "series", y: "value", fx: "label", text: (d) => fmt(d.value), dy: -6, fontSize: 10, fill: "currentColor" }));
+      marks.push(Plot.barY(data, { x: "series", y: "value", fx: "label", fill: colors.of, title: H }));
+      if (cfg.refine.valueLabels) marks.push(Plot.text(pickLabels(cfg, data), { x: "series", y: "value", fx: "label", text: (d) => fmt(d.value), dy: -6, fontSize: 10, fill: "currentColor" }));
       opt.fx.axis = "bottom";
     } else if (kind === "stacked-columns") {
-      Object.assign(opt, { x: { domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.25 } });
-      marks.push(Plot.barY(data, Plot.stackY({ x: "label", y: "value", fill: colors.of, z: "series", order: p.valueCols, title: tt, tip: tipOn })));
-      if (cfg.refine.valueLabels) marks.push(Plot.text(data, Plot.stackY({ x: "label", y: "value", z: "series", order: p.valueCols, text: (d) => fmt(d.value), fill: "white", fontSize: 10 })));
+      Object.assign(opt, { x: Object.assign({ domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.25 }, yAx || {}) });
+      marks.push(Plot.barY(data, Plot.stackY({ x: "label", y: "value", fill: colors.of, z: "series", order: p.valueCols, title: H })));
+      if (cfg.refine.valueLabels) marks.push(Plot.text(pickLabels(cfg, data), Plot.stackY({ x: "label", y: "value", z: "series", order: p.valueCols, text: (d) => fmt(d.value), fill: "white", fontSize: 10 })));
     } else {
-      Object.assign(opt, { x: { domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.25 } });
-      marks.push(Plot.barY(data, { x: "label", y: "value", fill: colors.of, title: tt, tip: tipOn }));
+      Object.assign(opt, { x: Object.assign({ domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.25 }, yAx || {}) });
+      marks.push(Plot.barY(data, { x: "label", y: "value", fill: colors.of, title: H }));
       if (cfg.refine.valueLabels) {
-        marks.push(Plot.text(data.filter((d) => !(d.value < 0)), { x: "label", y: "value", text: (d) => fmt(d.value), dy: -6, fill: "currentColor" }));
+        marks.push(Plot.text(pickLabels(cfg, data.filter((d) => !(d.value < 0))), { x: "label", y: "value", text: (d) => fmt(d.value), dy: -6, fill: "currentColor" }));
         marks.push(Plot.text(data.filter((d) => d.value < 0), { x: "label", y: "value", text: (d) => fmt(d.value), dy: 8, fill: "currentColor" }));
       }
     }
@@ -308,7 +330,9 @@ window.DP = window.DP || {};
       colors = colorizer(cfg, p, true, "series");
     }
     const rotate = kind === "multiple-columns" && shouldRotate(cfg, order, panelW - 30);
-    const marginBottom = rotate ? Math.min(220, d3.max(order, (l) => textWidth(l, 10)) + 10) : 28;
+    const yAx = yearAxis(order, rotate);
+    const marginBottom = rotate && !yAx ? Math.min(220, d3.max(order, (l) => textWidth(l, 10)) + 10) : 28;
+    const H = hoverInfo(cfg, fmt, colors);
     const hlStroke = (s) => colors.of({ series: s, label: "\u0000" });
     p.valueCols.forEach((s) => {
       const data = p.long.filter((d) => d.series === s);
@@ -317,11 +341,11 @@ window.DP = window.DP || {};
         plot = Plot.plot({
           width: panelW, height: Number(cfg.refine.panelHeight) + marginBottom, marginBottom, marginLeft: 34, marginTop: 18, style: Object.assign({}, baseStyle, { fontSize: "10px" }),
           color: { type: "identity" },
-          x: { domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.2 },
+          x: Object.assign({ domain: order, label: null, tickRotate: rotate ? -90 : 0, padding: 0.2 }, yAx || {}),
           y: valueAxis(cfg, data.map((d) => d.value), { ticks: 4 }),
           marks: [
-            Plot.barY(data, { x: "label", y: "value", fill: (d) => colors.of(d), title: tipText(fmt, false), tip: cfg.refine.tooltips !== false }),
-            cfg.refine.valueLabels ? Plot.text(data.filter((d) => !(d.value < 0)), { x: "label", y: "value", text: (d) => fmt(d.value), dy: -6, fontSize: 10, fill: "currentColor" }) : null,
+            Plot.barY(data, { x: "label", y: "value", fill: (d) => colors.of(d), title: H }),
+            cfg.refine.valueLabels ? Plot.text(pickLabels(cfg, data.filter((d) => !(d.value < 0))), { x: "label", y: "value", text: (d) => fmt(d.value), dy: -6, fontSize: 10, fill: "currentColor" }) : null,
             cfg.refine.valueLabels ? Plot.text(data.filter((d) => d.value < 0), { x: "label", y: "value", text: (d) => fmt(d.value), dy: 8, fontSize: 10, fill: "currentColor" }) : null,
             Plot.ruleY([0]),
           ],
@@ -336,7 +360,7 @@ window.DP = window.DP || {};
           marks: [
             Plot.lineY(p.long, { x: (d) => x(d.row), y: "value", z: "series", stroke: "#cfcfcf", strokeWidth: 1 }),
             Plot.lineY(data, { x: (d) => x(d.row), y: "value", stroke: hlStroke(s), strokeWidth: 2.5 }),
-            cfg.refine.tooltips !== false ? Plot.tip(data, Plot.pointerX({ x: (d) => x(d.row), y: "value", title: tipText(fmt, false) })) : null,
+            H ? Plot.dot(data.filter((d) => !Number.isNaN(d.value)), { x: (d) => x(d.row), y: "value", r: 6, fill: hlStroke(s), fillOpacity: 0, className: "dp-ghost", title: H }) : null,
           ],
         });
       }
@@ -380,11 +404,13 @@ window.DP = window.DP || {};
       marks.push(Plot.lineY(data, { x: "x", y: "value", z: "series", stroke: colors.of, strokeWidth: 2.5 }));
       marks.push(Plot.dot(data, { x: "x", y: "value", fill: colors.of, r: data.length < 120 ? 3 : 0 }));
       if (cfg.refine.valueLabels) {
-        marks.push(Plot.text(data, { x: "x", y: "value", text: (d) => fmt(d.value), dy: -9, fontSize: 10, fill: colors.of }));
+        marks.push(Plot.text(pickLabels(cfg, data), { x: "x", y: "value", text: (d) => fmt(d.value), dy: -9, fontSize: 10, fill: colors.of }));
       }
       marks.push(Plot.text(last, { x: "x", y: "value", text: "series", dx: 8, textAnchor: "start", fill: colors.of, fontWeight: "bold" }));
     }
-    if (cfg.refine.tooltips !== false) marks.push(Plot.tip(data, Plot.pointer({ x: "x", y: "value", title: tipText(fmt, true) })));
+    const H = hoverInfo(cfg, fmt, colors);
+    if (H && kind === "area") marks.push(Plot.dot(data, Plot.stackY({ x: "x", y: "value", z: "series", order: p.valueCols, r: 10, fill: colors.of, fillOpacity: 0, className: "dp-ghost", title: H })));
+    else if (H) marks.push(Plot.dot(data, { x: "x", y: "value", r: 7, fill: colors.of, fillOpacity: 0, className: "dp-ghost", title: H }));
     const node = Plot.plot({
       width, height: Number(cfg.refine.height) || 400, marginRight: kind === "area" ? 20 : Math.min(180, maxName + 20), marginTop: 20,
       marginBottom: xs.tickRotate ? Math.min(240, d3.max(xs.domain, (l) => textWidth(l, 11)) + 10) : 30,
@@ -404,8 +430,8 @@ window.DP = window.DP || {};
       width, height: Number(cfg.refine.height) || 400, grid: cfg.refine.grid, style: baseStyle, color: { type: "identity" },
       x: { label: xs + " →", tickFormat: axisFormatter(cfg) }, y: { label: "↑ " + ys, tickFormat: axisFormatter(cfg) },
       marks: [
-        Plot.dot(rows, { x: xs, y: ys, r: 5, fill: (r) => colors.of(r), fillOpacity: 0.85, title: (r) => `${r[p.label]}\n${xs}: ${fmt(r[xs])}\n${ys}: ${fmt(r[ys])}`, tip: cfg.refine.tooltips !== false }),
-        cfg.refine.valueLabels ? Plot.text(rows, { x: xs, y: ys, text: p.label, dy: -10, fontSize: 10, fill: "currentColor" }) : null,
+        Plot.dot(rows, { x: xs, y: ys, r: 5, fill: (r) => colors.of(r), fillOpacity: 0.85, title: cfg.refine.tooltips === false ? undefined : (r) => JSON.stringify({ k: String(r[p.label]), h: String(r[p.label]), rows: [[xs, fmt(r[xs]), colors.of(r)], [ys, fmt(r[ys]), colors.of(r)]] }) }),
+        cfg.refine.valueLabels ? Plot.text(rows, { x: xs, y: ys, text: (r) => String(r[p.label]), dy: -10, fontSize: 10, fill: "currentColor" }) : null,
       ],
     });
     return { node, colors };
@@ -421,20 +447,21 @@ window.DP = window.DP || {};
     if (kind === "dot") {
       const spans = p.rows.map((r) => ({ label: String(r[p.label]), min: d3.min(p.valueCols, (s) => r[s]), max: d3.max(p.valueCols, (s) => r[s]) }));
       marks.push(Plot.link(spans, { x1: "min", x2: "max", y1: "label", y2: "label", stroke: "#ccc", strokeWidth: 2 }));
-      marks.push(Plot.dot(p.long, { x: "value", y: "label", fill: colors.of, r: 6, title: tipText(fmt, true), tip: cfg.refine.tooltips !== false }));
+      marks.push(Plot.dot(p.long, { x: "value", y: "label", fill: colors.of, r: 6, title: hoverInfo(cfg, fmt, colors) }));
     } else {
       const rows = p.rows.map((r) => ({ label: String(r[p.label]), a: r[a], b: r[b] }));
       if (kind === "arrow") {
-        marks.push(Plot.arrow(rows, { x1: "a", x2: "b", y1: "label", y2: "label", stroke: (d) => (d.b >= d.a ? colors.map[b] || "#168232" : colors.map[a] || "#e0614a"), strokeWidth: 2.5, headLength: 8 }));
+        marks.push(Plot.arrow(rows, { x1: "a", x2: "b", y1: "label", y2: "label", stroke: (d) => (d.b >= d.a ? colors.map[b] || "#168232" : colors.map[a] || "#e0614a"), strokeWidth: 2.5, headLength: 8,
+          title: cfg.refine.tooltips === false ? undefined : (d) => JSON.stringify({ k: d.label, h: d.label, rows: [[a, fmt(d.a), colors.map[a]], [b, fmt(d.b), colors.map[b]], ["Change", fmt(d.b - d.a), ""]] }) }));
       } else {
         marks.push(Plot.link(rows, { x1: "a", x2: "b", y1: "label", y2: "label", stroke: "#bbb", strokeWidth: 3 }));
         const dimmed = (d, key) => colors.of({ label: d.label, series: key });
-        marks.push(Plot.dot(rows, { x: "a", y: "label", fill: (d) => dimmed(d, a), r: 6, title: (d) => `${d.label}\n${a}: ${fmt(d.a)}\n${b}: ${fmt(d.b)}`, tip: cfg.refine.tooltips !== false }));
+        marks.push(Plot.dot(rows, { x: "a", y: "label", fill: (d) => dimmed(d, a), r: 6, title: cfg.refine.tooltips === false ? undefined : (d) => JSON.stringify({ k: d.label, h: d.label, rows: [[a, fmt(d.a), dimmed(d, a)], [b, fmt(d.b), dimmed(d, b)]] }) }));
         marks.push(Plot.dot(rows, { x: "b", y: "label", fill: (d) => dimmed(d, b), r: 6 }));
       }
       if (cfg.refine.valueLabels) {
         const up = rows.filter((d) => d.a <= d.b), down = rows.filter((d) => d.a > d.b);
-        const lab = (data, key, side) => Plot.text(data, { x: key, y: "label", text: (d) => fmt(d[key]), dx: side < 0 ? -10 : 10, textAnchor: side < 0 ? "end" : "start", fill: "currentColor" });
+        const lab = (data, key, side) => Plot.text(pickLabels(cfg, data), { x: key, y: "label", text: (d) => fmt(d[key]), dx: side < 0 ? -10 : 10, textAnchor: side < 0 ? "end" : "start", fill: "currentColor" });
         marks.push(lab(up, "a", -1), lab(up, "b", 1), lab(down, "a", 1), lab(down, "b", -1));
       }
     }
@@ -446,7 +473,7 @@ window.DP = window.DP || {};
     return { node, colors };
   }
 
-  function pieSvg(values, labels, colors, size, inner, fmt, showLabels) {
+  function pieSvg(values, labels, colors, size, inner, fmt, showLabels, series) {
     const ns = "http://www.w3.org/2000/svg";
     const svg = document.createElementNS(ns, "svg");
     svg.setAttribute("width", size);
@@ -463,7 +490,7 @@ window.DP = window.DP || {};
       path.setAttribute("stroke", "white");
       path.setAttribute("stroke-width", "1.5");
       const t = document.createElementNS(ns, "title");
-      t.textContent = labels[i] + ": " + fmt(a.data);
+      t.textContent = JSON.stringify({ k: labels[i], h: labels[i], s: series, v: fmt(a.data), c: colors[i] });
       path.appendChild(t);
       svg.appendChild(path);
       if (showLabels && a.endAngle - a.startAngle > 0.25) {
@@ -505,13 +532,13 @@ window.DP = window.DP || {};
       const size = Math.min(220, Math.floor((width - 16 * (perRow - 1)) / perRow));
       const grid = el("div", { class: "dp-panels", style: `grid-template-columns:repeat(${perRow}, ${size}px);gap:16px` });
       p.valueCols.forEach((s) => {
-        grid.appendChild(el("div", { class: "dp-panel" }, [el("div", { class: "dp-panel-title", text: s }), pieSvg(p.rows.map((r) => r[s]), labels, cols, size, inner, fmt, cfg.refine.valueLabels)]));
+        grid.appendChild(el("div", { class: "dp-panel" }, [el("div", { class: "dp-panel-title", text: s }), pieSvg(p.rows.map((r) => r[s]), labels, cols, size, inner, fmt, cfg.refine.valueLabels, s)]));
       });
       return { node: grid, colors };
     }
     const size = Math.min(width, Number(cfg.refine.height) || 400, 420);
     const s = p.valueCols[0];
-    return { node: el("div", { class: "dp-pie-wrap" }, [pieSvg(p.rows.map((r) => r[s]), labels, cols, size, inner, fmt, cfg.refine.valueLabels)]), colors };
+    return { node: el("div", { class: "dp-pie-wrap" }, [pieSvg(p.rows.map((r) => r[s]), labels, cols, size, inner, fmt, cfg.refine.valueLabels, s)]), colors };
   }
 
   function tableChart(cfg, ds) {
@@ -524,6 +551,7 @@ window.DP = window.DP || {};
     const tbody = el("tbody");
     const pal = DP.PALETTES[cfg.refine.palette] || DP.PALETTES.datapott;
     const extents = {};
+    const isYear = (c) => c.type === "number" && (/year|yr/i.test(c.name) || ds.rows.every((r) => Number.isNaN(r[c.name]) || (Number.isInteger(r[c.name]) && r[c.name] >= 1000 && r[c.name] <= 2999)));
     cols.forEach((c) => c.type === "number" && (extents[c.name] = d3.extent(ds.rows, (r) => r[c.name])));
     function fill() {
       tbody.innerHTML = "";
@@ -532,7 +560,8 @@ window.DP = window.DP || {};
       rows.forEach((r) => {
         const row = el("tr");
         cols.forEach((c) => {
-          if (c.type === "number") {
+          if (isYear(c)) row.appendChild(el("td", { text: Number.isNaN(r[c.name]) ? "" : String(r[c.name]) }));
+          else if (c.type === "number") {
             const td = el("td", { class: "num" });
             if (cfg.refine.tableBars && extents[c.name][1] > 0) {
               const w = Math.max(0, (r[c.name] / Math.max(Math.abs(extents[c.name][0]), extents[c.name][1])) * 100);
@@ -559,6 +588,96 @@ window.DP = window.DP || {};
     table.appendChild(tbody);
     fill();
     return { node: el("div", { class: "dp-table-wrap" }, [table]), colors: { mode: "single" } };
+  }
+
+  /* ------------------------------ hover tooltips ------------------------------ */
+  /**
+   * Instant tooltips. Each hoverable mark carries a JSON <title> (from the chart code).
+   * We turn it into data, then one tooltip box follows the pointer.
+   * In multi-panel charts the same category lights up in every panel with its value.
+   */
+  DP.attachHover = function (body) {
+    const items = [];
+    body.querySelectorAll("svg title").forEach((t) => {
+      let info;
+      try { info = JSON.parse(t.textContent); } catch (e) { return; }
+      const node = t.parentNode;
+      t.remove();
+      node.__dp = info;
+      node.setAttribute("data-dp", "");
+      items.push(node);
+    });
+    if (!items.length) return;
+    const linked = body.dataset.linked === "1";
+    const tip = el("div", { class: "dp-tip" });
+    body.appendChild(tip);
+    const floating = [];
+    let current = null;
+
+    function clear() {
+      if (!current) return;
+      body.classList.remove("dp-hovering");
+      items.forEach((i) => i.classList.remove("dp-on"));
+      floating.forEach((f) => f.remove());
+      floating.length = 0;
+      tip.style.display = "none";
+      current = null;
+    }
+    function rowHtml(name, value, color, bold) {
+      return `<div class="dp-tip-row${bold ? " b" : ""}">${color ? `<i style="background:${color}"></i>` : ""}<span>${escapeHtml(name)}</span><b>${escapeHtml(value)}</b></div>`;
+    }
+    function open(target) {
+      clear();
+      current = target;
+      const info = target.__dp;
+      const same = items.filter((i) => i.__dp.k === info.k);
+      body.classList.add("dp-hovering");
+      same.forEach((i) => i.classList.add("dp-on"));
+      target.classList.add("dp-on");
+      let html = `<div class="dp-tip-head">${escapeHtml(info.h)}</div>`;
+      if (info.rows) html += info.rows.map((r) => rowHtml(r[0], r[1], r[2])).join("");
+      else if (!linked && same.length > 1) html += same.map((i) => rowHtml(i.__dp.s, i.__dp.v, i.__dp.c, i === target)).join("");
+      else html += rowHtml(info.s || "", info.v, info.c);
+      tip.innerHTML = html;
+      tip.style.display = "block";
+      if (linked) {
+        const box = body.getBoundingClientRect();
+        same.forEach((i) => {
+          if (!/^(rect|circle)$/.test(i.tagName)) return;
+          const b = i.getBoundingClientRect();
+          const lab = el("div", { class: "dp-linklabel" + (i === target ? " b" : ""), text: i.__dp.v });
+          lab.style.left = b.left + b.width / 2 - box.left + "px";
+          lab.style.top = b.top - box.top + "px";
+          body.appendChild(lab);
+          floating.push(lab);
+        });
+      }
+    }
+    function move(e) {
+      const box = body.getBoundingClientRect();
+      let x = e.clientX - box.left + 14, y = e.clientY - box.top + 14;
+      if (x + tip.offsetWidth > box.width) x = e.clientX - box.left - tip.offsetWidth - 14;
+      if (y + tip.offsetHeight > box.height) y = Math.max(0, e.clientY - box.top - tip.offsetHeight - 14);
+      tip.style.left = Math.max(0, x) + "px";
+      tip.style.top = y + "px";
+    }
+    body.addEventListener("pointermove", (e) => {
+      const t = e.target && e.target.closest ? e.target.closest("[data-dp]") : null;
+      if (t && t.__dp) {
+        if (t !== current) open(t);
+        move(e);
+      } else clear();
+    });
+    body.addEventListener("pointerleave", clear);
+    // Phones and tablets: tap a bar to see its tooltip, tap elsewhere to close
+    body.addEventListener("pointerdown", (e) => {
+      if (e.pointerType === "mouse") return;
+      const t = e.target.closest && e.target.closest("[data-dp]");
+      if (t && t.__dp) { open(t); move(e); } else clear();
+    });
+  };
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
   /* ------------------------------ main entry ------------------------------ */
@@ -601,6 +720,7 @@ window.DP = window.DP || {};
       const legend = legendNode(out.colors);
       if (legend) legendSlot.appendChild(legend);
       body.appendChild(out.node);
+      body.dataset.linked = ["multiple-columns", "multiple-lines", "multiple-donuts"].includes(cfg.type) ? "1" : "";
     } catch (err) {
       console.error(err);
       body.appendChild(el("div", { class: "dp-empty", text: err.message }));
@@ -641,6 +761,7 @@ window.DP = window.DP || {};
       footer.appendChild(el("img", { class: "dp-logo-img", src: cfg.layout.logoUrl, alt: "Logo" }));
     }
     root.appendChild(footer);
+    DP.attachHover(body);
     return root;
   };
 })(window.DP);
