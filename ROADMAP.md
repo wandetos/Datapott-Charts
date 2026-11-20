@@ -20,10 +20,12 @@ We build in phases. Each phase ends with something that works and is live on dat
 
 ## Phase 2: Datawrapper-level polish
 - [ ] Maps: world and Africa choropleth maps (d3-geo + Natural Earth), symbol maps, locator maps
-- [ ] Hover tooltips on every chart type
-- [ ] Number formats: prefix/suffix (%, $, M), thousands, custom axis ranges
-- [ ] Highlights (colour one bar, fade the rest) and text annotations on the chart
-- [ ] Datapott theme: logo in footer, brand fonts, saved default settings
+- [x] Hover tooltips on every chart type (area charts still to do)
+- [x] Number formats: prefix/suffix (%, $, M), thousands, custom axis ranges
+- [x] Highlights (colour chosen bars/regions/lines, grey the rest)
+- [ ] Text annotations on the chart
+- [x] Logo in footer (DataPott wordmark or your own image in assets/logo.png)
+- [ ] Brand fonts and saved default settings
 - [ ] PDF export; social-media sizes (1080×1080, 1200×675)
 - [ ] Sort panels, separate mobile panel count, reverse order
 - [ ] Election donut, waterfall and dual-axis charts (Datawrapper Business features, free here)

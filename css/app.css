@@ -120,3 +120,9 @@ table.grid td.rownum { background: #f6f6f6; color: #888; text-align: center; }
   .topbar { padding: 10px 14px; }
   main { padding: 16px; }
 }
+
+/* Highlight chips (step 3 → Annotate) */
+.hl-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.hl-chip { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #ccc; border-radius: 14px; padding: 4px 10px; font-size: 12.5px; background: #fff; cursor: pointer; }
+.hl-chip input { margin: 0; }
+.hl-chip.on { border-color: var(--brand); background: #e8f3eb; }

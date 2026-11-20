@@ -23,7 +23,13 @@
 .dp-panel-title { font-size: 12px; font-weight: 700; margin-bottom: 2px; }
 .dp-pie-wrap { display: flex; justify-content: center; }
 .dp-notes { font-size: 11.5px; color: var(--dp-muted); font-style: italic; margin: 10px 0 0; }
-.dp-footer { font-size: 11px; color: var(--dp-muted); margin-top: 8px; }
+.dp-footer { font-size: 11px; color: var(--dp-muted); margin-top: 8px; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+.dp-footer-left { flex: 1; }
+.dp-logo { display: inline-flex; flex-direction: column; align-items: flex-end; line-height: 1; white-space: nowrap; }
+.dp-logo b { color: #1d4f9c; font-size: 15px; font-weight: 800; letter-spacing: -0.3px; }
+.dp-logo small { color: #d32f2f; font-size: 7.5px; font-weight: 700; letter-spacing: 2.2px; margin-top: 1px; }
+.dp-dark .dp-logo b { color: #8fb5f0; }
+.dp-logo-img { max-height: 30px; max-width: 140px; object-fit: contain; }
 .dp-footer a { color: #1d81a2; text-decoration: none; }
 .dp-dark .dp-footer a { color: #6cc4e6; }
 .dp-footer a:hover { text-decoration: underline; }

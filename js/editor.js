@@ -384,6 +384,17 @@
       <label class="field">Colours</label>
       <div class="colors">${ck.keys.map((k, i) => `<span>${k === "__single__" ? "Base colour" : esc(k)}</span><input type="color" data-ckey="${esc(k)}" value="${r.colors[k] || pal[i % pal.length]}" />`).join("")}</div>
       <button class="btn ghost small" id="resetcol" style="margin-top:6px">Reset colours</button>
+      <h3 style="margin-top:18px">Number format</h3>
+      <div class="row">
+        <div><label class="field">Prefix</label><input type="text" id="prefix" value="${esc(r.prefix)}" placeholder="e.g. $"/></div>
+        <div><label class="field">Suffix</label><input type="text" id="suffix" value="${esc(r.suffix)}" placeholder="e.g. % or M"/></div>
+      </div>
+      <label class="check"><input type="checkbox" id="thou" ${r.thousands !== false ? "checked" : ""}/> Thousands separator (1,000)</label>
+      ${t === "table" || ["pie", "donut", "multiple-donuts"].includes(t) ? "" : `
+      <label class="field">Value axis range <span class="hint">(leave empty for automatic)</span></label>
+      <div class="row"><input type="number" id="amin" value="${esc(r.axisMin)}" placeholder="min"/><input type="number" id="amax" value="${esc(r.axisMax)}" placeholder="max"/></div>`}
+      <h3 style="margin-top:18px">Display</h3>
+      <label class="check"><input type="checkbox" id="tips" ${r.tooltips !== false ? "checked" : ""}/> Tooltips on hover</label>
       <label class="check"><input type="checkbox" id="vl" ${r.valueLabels ? "checked" : ""}/> Show value labels</label>
       <label class="check"><input type="checkbox" id="grid" ${r.grid ? "checked" : ""}/> Grid lines</label>
       ${t === "table" ? `<label class="check"><input type="checkbox" id="tbars" ${r.tableBars ? "checked" : ""}/> Bars inside number cells</label>` : ""}
@@ -402,6 +413,12 @@
     $$("[data-ckey]", tb).forEach((inp) => (inp.oninput = (e) => change((c) => (c.refine.colors[inp.dataset.ckey] = e.target.value))));
     $("#resetcol", tb).onclick = () => change((c) => (c.refine.colors = {}), { panel: true });
     $("#vl", tb).onchange = (e) => change((c) => (c.refine.valueLabels = e.target.checked));
+    $("#tips", tb).onchange = (e) => change((c) => (c.refine.tooltips = e.target.checked));
+    $("#thou", tb).onchange = (e) => change((c) => (c.refine.thousands = e.target.checked));
+    $("#prefix", tb).oninput = (e) => change((c) => (c.refine.prefix = e.target.value));
+    $("#suffix", tb).oninput = (e) => change((c) => (c.refine.suffix = e.target.value));
+    if ($("#amin", tb)) $("#amin", tb).oninput = (e) => change((c) => (c.refine.axisMin = e.target.value));
+    if ($("#amax", tb)) $("#amax", tb).oninput = (e) => change((c) => (c.refine.axisMax = e.target.value));
     $("#grid", tb).onchange = (e) => change((c) => (c.refine.grid = e.target.checked));
     if ($("#tbars", tb)) $("#tbars", tb).onchange = (e) => change((c) => (c.refine.tableBars = e.target.checked));
     if ($("#ppr", tb)) $("#ppr", tb).oninput = (e) => { $("#pprv").textContent = e.target.value; change((c) => (c.refine.panelsPerRow = Number(e.target.value))); };
@@ -418,8 +435,30 @@
       ${f("notes", "Notes", c.notes, "Notes shown below the chart", true)}
       <div class="row"><div>${f("source", "Data source", c.source, "Who published the data?")}</div><div>${f("sourceUrl", "Link to data source", c.sourceUrl, "https://…")}</div></div>
       ${f("byline", "Byline", c.byline, "Who created the visualization? e.g. Datapott Analytics")}
-      ${f("alt", "Alternative description for screen readers", c.alt, "Describe the chart for readers who can't see it", true)}`;
+      ${f("alt", "Alternative description for screen readers", c.alt, "Describe the chart for readers who can't see it", true)}
+      <h3 style="margin-top:18px">Highlight elements</h3>
+      <p class="hint">Tick bars, regions or lines to keep in colour. Everything else turns grey.</p>
+      <div class="hl-list">${highlightOptions().map((o) => `<label class="hl-chip ${(c.refine.highlight || []).includes(o) ? "on" : ""}"><input type="checkbox" data-hl="${esc(o)}" ${(c.refine.highlight || []).includes(o) ? "checked" : ""}/>${esc(o)}</label>`).join("")}</div>
+      ${(c.refine.highlight || []).length ? `<button class="btn ghost small" id="hlclear" style="margin-top:6px">Clear highlights</button>` : ""}`;
+    $$("[data-hl]", tb).forEach((cb) => (cb.onchange = () => change((cfg) => {
+      const set = new Set(cfg.refine.highlight || []);
+      if (cb.checked) set.add(cb.dataset.hl); else set.delete(cb.dataset.hl);
+      cfg.refine.highlight = Array.from(set);
+    }, { panel: true })));
+    if ($("#hlclear", tb)) $("#hlclear", tb).onclick = () => change((cfg) => (cfg.refine.highlight = []), { panel: true });
     ["title", "description", "notes", "source", "sourceUrl", "byline", "alt"].forEach((k) => ($("#" + k, tb).oninput = (e) => change((cfg) => (cfg[k] = e.target.value))));
+  }
+
+  /** Categories and series the user can highlight. */
+  function highlightOptions() {
+    const vis = S.ds.columns.filter((c) => !c.hidden);
+    const label = vis.find((c) => c.name === S.cfg.refine.labelCol) || vis.find((c) => c.type !== "number") || vis[0];
+    const cats = label ? S.ds.rows.map((r) => String(r[label.name])) : [];
+    const series = vis.filter((c) => c !== label && c.type === "number").map((c) => c.name);
+    const t = S.cfg.type;
+    if (["lines", "multiple-lines", "area"].includes(t)) return series;
+    if (["stacked-bars", "stacked-columns", "grouped-bars", "grouped-columns", "dot", "range", "arrow"].includes(t)) return series.concat(cats);
+    return cats;
   }
 
   function tabLayout(tb) {
@@ -428,6 +467,14 @@
       <h3>Footer</h3>
       <label class="check"><input type="checkbox" id="dd" ${l.dataDownload ? "checked" : ""}/> "Get the data" download link</label>
       <label class="check"><input type="checkbox" id="att" ${l.attribution ? "checked" : ""}/> "Created with Datapott Charts" (free to switch off: it is your tool)</label>
+      <h3 style="margin-top:18px">Logo</h3>
+      <select id="logo">
+        <option value="datapott" ${l.logo === "datapott" ? "selected" : ""}>DataPott Analytics wordmark</option>
+        <option value="image" ${l.logo === "image" ? "selected" : ""}>My logo image</option>
+        <option value="none" ${l.logo === "none" ? "selected" : ""}>No logo</option>
+      </select>
+      ${l.logo === "image" ? `<label class="field">Logo image address</label><input type="text" id="logourl" value="${esc(l.logoUrl)}"/>
+        <p class="hint">Put your logo file in the <code>assets</code> folder on GitHub as <code>logo.png</code>, or paste a full image link.</p>` : ""}
       <h3 style="margin-top:18px">Appearance</h3>
       <label class="check"><input type="checkbox" id="dark" ${l.dark ? "checked" : ""}/> Dark mode</label>
       <h3 style="margin-top:18px">Organize</h3>
@@ -435,6 +482,8 @@
       <input type="text" id="folder" value="${esc(S.cfg.folder)}" list="folders"/>
       <datalist id="folders">${Array.from(new Set(DP.store.list().map((c) => c.folder).filter(Boolean))).map((f) => `<option value="${esc(f)}">`).join("")}</datalist>`;
     $("#dd", tb).onchange = (e) => change((c) => (c.layout.dataDownload = e.target.checked));
+    $("#logo", tb).onchange = (e) => change((c) => (c.layout.logo = e.target.value), { panel: true });
+    if ($("#logourl", tb)) $("#logourl", tb).oninput = (e) => change((c) => (c.layout.logoUrl = e.target.value.trim()));
     $("#att", tb).onchange = (e) => change((c) => (c.layout.attribution = e.target.checked));
     $("#dark", tb).onchange = (e) => change((c) => (c.layout.dark = e.target.checked), { panel: true });
     $("#folder", tb).oninput = (e) => change((c) => (c.folder = e.target.value.trim()));
