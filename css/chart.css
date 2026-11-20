@@ -70,3 +70,11 @@
 .dp-body[data-map="1"].dp-hovering circle[data-dp]:not(.dp-on) { opacity: .5; }
 .dp-map-nodata { font-size: 11px; color: var(--dp-muted); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
 .dp-map-nodata i { width: 12px; height: 12px; background: #cfcfcf; border-radius: 2px; display: inline-block; }
+
+/* Text annotations */
+.dp-anno { position: absolute; z-index: 10; font-size: 12.5px; line-height: 1.3; max-width: 45%; white-space: pre-line; pointer-events: none; color: var(--dp-text);
+  text-shadow: 0 0 3px var(--dp-bg), 0 0 3px var(--dp-bg), 0 0 3px var(--dp-bg); }
+.dp-anno-s { font-size: 11px; } .dp-anno-l { font-size: 15px; } .dp-anno.b { font-weight: 700; }
+.dp-anno.box { background: var(--dp-bg); opacity: .95; padding: 3px 7px; border-left: 3px solid currentColor; border-radius: 2px; text-shadow: none; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.dp-anno-edit .dp-anno { pointer-events: auto; cursor: move; outline: 1px dashed rgba(29,129,162,.5); outline-offset: 2px; user-select: none; touch-action: none; }
+.dp-anno-edit .dp-anno.dragging { outline: 2px solid #1d81a2; }

@@ -29,9 +29,10 @@ We build in phases. Each phase ends with something that works and is live on dat
 - [x] Value labels: all, first and last, last only, or hidden; year axes show first and last year
 - [x] Number formats: prefix/suffix (%, $, M), thousands, custom axis ranges
 - [x] Highlights (colour chosen bars/regions/lines, grey the rest)
-- [ ] Text annotations on the chart
+- [x] Text annotations: drag notes onto the chart (size, colour, bold, box, alignment)
 - [x] Logo in footer (DataPott wordmark or your own image in assets/logo.png)
-- [ ] Brand fonts and saved default settings
+- [x] Saved default style for new charts (Layout → My default style)
+- [ ] Brand fonts
 - [x] PDF export; social-media sizes (1080×1080, 1080×1350, 1200×675, 1200×630, 1080×1920) and A4, with preview
 - [x] Map test data files in samples/
 - [ ] Sort panels, separate mobile panel count, reverse order

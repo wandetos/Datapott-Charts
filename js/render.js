@@ -54,6 +54,7 @@ window.DP = window.DP || {};
       transpose: false,
       firstRowLabel: true,
       columns: {},
+      annotations: [], // { text, x, y (0–1 of the chart area), size, color, bold, box, align }
       refine: {
         labelCol: "",
         palette: "datapott",
@@ -104,6 +105,7 @@ window.DP = window.DP || {};
     cfg.refine = Object.assign({}, d.refine, cfg.refine || {});
     cfg.layout = Object.assign({}, d.layout, cfg.layout || {});
     cfg.columns = cfg.columns || {};
+    cfg.annotations = Array.isArray(cfg.annotations) ? cfg.annotations : [];
     return cfg;
   };
 
@@ -692,6 +694,54 @@ window.DP = window.DP || {};
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   }
 
+  /* ------------------------------ text annotations ------------------------------ */
+  /** Notes placed on the chart. Position is stored as a share (0–1) of the chart area. */
+  function drawAnnotations(body, cfg, opts) {
+    const list = cfg.annotations || [];
+    list.forEach((a, i) => {
+      if (!a || !a.text) return;
+      const n = el("div", { class: `dp-anno dp-anno-${a.size || "m"}${a.bold ? " b" : ""}${a.box ? " box" : ""}`, "data-anno": i, text: a.text });
+      n.style.left = (Number(a.x) || 0) * 100 + "%";
+      n.style.top = (Number(a.y) || 0) * 100 + "%";
+      if (a.color) n.style.color = a.color;
+      n.style.textAlign = a.align || "left";
+      if (a.align === "center") n.style.transform = "translateX(-50%)";
+      if (a.align === "right") n.style.transform = "translateX(-100%)";
+      body.appendChild(n);
+    });
+    if (!opts || !opts.editable || !list.length) return;
+    body.classList.add("dp-anno-edit");
+    // Editor only: drag notes to move them
+    body.addEventListener("pointerdown", (e) => {
+      const n = e.target.closest && e.target.closest("[data-anno]");
+      if (!n) return;
+      e.preventDefault();
+      const box = body.getBoundingClientRect();
+      const start = n.getBoundingClientRect();
+      const a = list[Number(n.dataset.anno)];
+      const shift = a.align === "center" ? start.width / 2 : a.align === "right" ? start.width : 0;
+      const offX = e.clientX - start.left - shift, offY = e.clientY - start.top;
+      n.setPointerCapture(e.pointerId);
+      n.classList.add("dragging");
+      const move = (ev) => {
+        const x = Math.min(0.99, Math.max(0, (ev.clientX - box.left - offX) / box.width));
+        const y = Math.min(0.99, Math.max(0, (ev.clientY - box.top - offY) / box.height));
+        n.style.left = x * 100 + "%";
+        n.style.top = y * 100 + "%";
+        n.dataset.x = x;
+        n.dataset.y = y;
+      };
+      const up = () => {
+        n.removeEventListener("pointermove", move);
+        n.removeEventListener("pointerup", up);
+        n.classList.remove("dragging");
+        if (n.dataset.x !== undefined && opts.onAnnoMove) opts.onAnnoMove(Number(n.dataset.anno), Number(n.dataset.x), Number(n.dataset.y));
+      };
+      n.addEventListener("pointermove", move);
+      n.addEventListener("pointerup", up);
+    });
+  }
+
   /* ------------------------------ main entry ------------------------------ */
   /**
    * Render a full chart (title, legend, plot, notes, footer) into `container`.
@@ -779,6 +829,7 @@ window.DP = window.DP || {};
     }
     root.appendChild(footer);
     DP.attachHover(body);
+    drawAnnotations(body, cfg, opts);
     return root;
   };
 })(window.DP);

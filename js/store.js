@@ -49,6 +49,13 @@ window.DP = window.DP || {};
       for (let i = 0; i < 5; i++) id += chars[Math.floor(Math.random() * chars.length)];
       return readAll()[id] ? DP.store.newId() : id;
     },
+    /** Your default style for new charts (colours, labels, footer, logo…). */
+    getDefaults() {
+      try { return JSON.parse(localStorage.getItem(KEY + "-defaults") || "null"); } catch (e) { return null; }
+    },
+    setDefaults(d) {
+      try { if (d) localStorage.setItem(KEY + "-defaults", JSON.stringify(d)); else localStorage.removeItem(KEY + "-defaults"); } catch (e) { /* ignore */ }
+    },
     /** Backup: download every chart as one JSON file. */
     exportAll() {
       return JSON.stringify(readAll(), null, 2);

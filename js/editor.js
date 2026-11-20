@@ -32,6 +32,8 @@
 
   function newChart() {
     const cfg = DP.defaultConfig();
+    const def = DP.store.getDefaults();
+    if (def) { Object.assign(cfg.refine, def.refine || {}); Object.assign(cfg.layout, def.layout || {}); }
     cfg.id = DP.store.newId();
     cfg.folder = S.folder || "";
     cfg.createdAt = Date.now();
@@ -137,7 +139,11 @@
     const box = $("#preview");
     if (!box) return;
     box.style.width = S.previewWidth + "px";
-    DP.renderChart(box, S.cfg, S.ds, { width: S.previewWidth });
+    DP.renderChart(box, S.cfg, S.ds, {
+      width: S.previewWidth,
+      editable: S.step === 3 && S.tab === "annotate",
+      onAnnoMove: (i, x, y) => { if (S.cfg.annotations[i]) { S.cfg.annotations[i].x = +x.toFixed(4); S.cfg.annotations[i].y = +y.toFixed(4); persist(); } },
+    });
   }
 
   /** Change the config, save, and redraw. */
@@ -535,7 +541,32 @@
       <h3 style="margin-top:18px">Highlight elements</h3>
       <p class="hint">Tick bars, regions or lines to keep in colour. Everything else turns grey.</p>
       <div class="hl-list">${highlightOptions().map((o) => `<label class="hl-chip ${(c.refine.highlight || []).includes(o) ? "on" : ""}"><input type="checkbox" data-hl="${esc(o)}" ${(c.refine.highlight || []).includes(o) ? "checked" : ""}/>${esc(o)}</label>`).join("")}</div>
-      ${(c.refine.highlight || []).length ? `<button class="btn ghost small" id="hlclear" style="margin-top:6px">Clear highlights</button>` : ""}`;
+      ${(c.refine.highlight || []).length ? `<button class="btn ghost small" id="hlclear" style="margin-top:6px">Clear highlights</button>` : ""}
+      <h3 style="margin-top:18px">Text annotations</h3>
+      <p class="hint">Add a note, then <b>drag it</b> in the preview to place it.</p>
+      <div id="annos">${(c.annotations || []).map((a, i) => `
+        <div class="anno-item" data-i="${i}">
+          <textarea rows="2" data-k="text">${esc(a.text)}</textarea>
+          <div class="row anno-opts">
+            <select data-k="size"><option value="s" ${a.size === "s" ? "selected" : ""}>Small</option><option value="m" ${!a.size || a.size === "m" ? "selected" : ""}>Normal</option><option value="l" ${a.size === "l" ? "selected" : ""}>Large</option></select>
+            <select data-k="align"><option value="left" ${!a.align || a.align === "left" ? "selected" : ""}>Left</option><option value="center" ${a.align === "center" ? "selected" : ""}>Centre</option><option value="right" ${a.align === "right" ? "selected" : ""}>Right</option></select>
+            <input type="color" data-k="color" value="${esc(a.color || "#1d1d1d")}" title="Text colour"/>
+            <label class="mini"><input type="checkbox" data-k="bold" ${a.bold ? "checked" : ""}/>Bold</label>
+            <label class="mini"><input type="checkbox" data-k="box" ${a.box ? "checked" : ""}/>Box</label>
+            <button class="btn danger small" data-del="${i}" title="Delete note">✕</button>
+          </div>
+        </div>`).join("")}</div>
+      <button class="btn ghost small" id="addanno">＋ Add text annotation</button>`;
+    $("#addanno", tb).onclick = () => change((cfg) => cfg.annotations.push({ text: "Your note here", x: 0.55, y: 0.15, size: "m", align: "left", color: "#1d1d1d", bold: false, box: false }), { panel: true });
+    $$(".anno-item", tb).forEach((item) => {
+      const i = Number(item.dataset.i);
+      $$("[data-k]", item).forEach((inp) => {
+        const k = inp.dataset.k;
+        const ev = inp.tagName === "SELECT" || inp.type === "checkbox" ? "onchange" : "oninput";
+        inp[ev] = () => change((cfg) => (cfg.annotations[i][k] = inp.type === "checkbox" ? inp.checked : inp.value));
+      });
+      $("[data-del]", item).onclick = () => change((cfg) => cfg.annotations.splice(i, 1), { panel: true });
+    });
     $$("[data-hl]", tb).forEach((cb) => (cb.onchange = () => change((cfg) => {
       const set = new Set(cfg.refine.highlight || []);
       if (cb.checked) set.add(cb.dataset.hl); else set.delete(cb.dataset.hl);
@@ -576,7 +607,24 @@
       <h3 style="margin-top:18px">Organize</h3>
       <label class="field">Folder (e.g. Health, Poverty, Development, Climate Change, Food & Hunger)</label>
       <input type="text" id="folder" value="${esc(S.cfg.folder)}" list="folders"/>
-      <datalist id="folders">${Array.from(new Set(DP.store.list().map((c) => c.folder).filter(Boolean))).map((f) => `<option value="${esc(f)}">`).join("")}</datalist>`;
+      <datalist id="folders">${Array.from(new Set(DP.store.list().map((c) => c.folder).filter(Boolean))).map((f) => `<option value="${esc(f)}">`).join("")}</datalist>
+      <h3 style="margin-top:18px">My default style</h3>
+      <p class="hint">Save this chart's palette, number format, labels, grid, footer, logo and map colours as the starting style for every new chart.</p>
+      <div class="row" style="gap:8px">
+        <button class="btn ghost small" id="savedef" style="flex:0 0 auto">💾 Save as my default style</button>
+        ${DP.store.getDefaults() ? `<button class="btn ghost small" id="resetdef" style="flex:0 0 auto">Reset to standard</button>` : ""}
+      </div>
+      <div id="defmsg" class="hint"></div>`;
+    $("#savedef", tb).onclick = () => {
+      const r = S.cfg.refine, l = S.cfg.layout;
+      const pick = (o, keys) => keys.reduce((m, k) => ((m[k] = o[k]), m), {});
+      DP.store.setDefaults({
+        refine: pick(r, ["palette", "decimals", "thousands", "prefix", "suffix", "valueLabels", "labelMode", "grid", "tooltips", "rotateLabels", "panelsPerRow", "panelHeight", "height", "mapScheme", "mapScale", "mapSteps", "mapReverse"]),
+        layout: pick(l, ["dataDownload", "attribution", "dark", "logo", "logoUrl", "previewWidth"]),
+      });
+      $("#defmsg").innerHTML = '<span class="ok">✔ Saved. New charts will start with this style.</span>';
+    };
+    if ($("#resetdef", tb)) $("#resetdef", tb).onclick = () => { DP.store.setDefaults(null); renderEditor(); };
     $("#dd", tb).onchange = (e) => change((c) => (c.layout.dataDownload = e.target.checked));
     $("#logo", tb).onchange = (e) => change((c) => (c.layout.logo = e.target.value), { panel: true });
     if ($("#logourl", tb)) $("#logourl", tb).oninput = (e) => change((c) => (c.layout.logoUrl = e.target.value.trim()));
